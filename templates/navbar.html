@@ -1,0 +1,11 @@
+<div class="navbar" style="background-color:#1a1a2e; padding:10px 20px; display:flex; justify-content:space-between; align-items:center; color:#cfd8ff;">
+    <div class="logo">
+        <img src="{{ url_for('static', filename='images/eye.png') }}" style="height:40px;">
+        <span style="font-weight:bold; margin-left:10px;">Ocularis </span>
+    </div>
+    <div class="nav-links">
+        <a href="{{ url_for('dashboard') }}" style="margin-right:15px; color:#cfd8ff; text-decoration:none;">Dashboard</a>
+        <a href="{{ url_for('upload') }}" style="margin-right:15px; color:#cfd8ff; text-decoration:none;">Upload</a>
+        <a href="{{ url_for('logout') }}" style="color:#ff4d4d; text-decoration:none;">Logout</a>
+    </div>
+</div>

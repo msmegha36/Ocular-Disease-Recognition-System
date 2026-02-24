@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ocularis Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0b0e14;
+            --sidebar-bg: #151921;
+            --card-bg: #1c222d;
+            --accent-blue: #3498db;
+            --text-main: #e0e6ed;
+            --text-dim: #94a3b8;
+            --glow: 0 0 15px rgba(52, 152, 219, 0.3);
+        }
+
+        body {
+            background: radial-gradient(circle at center, #1a2a44 0%, #0b0e14 100%);
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: 240px;
+            background-color: var(--sidebar-bg);
+            display: flex;
+            flex-direction: column;
+            padding: 20px 0;
+            border-right: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .brand {
+            padding: 0 25px 40px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand img { height: 35px; }
+        .brand span { font-weight: 600; font-size: 1.2rem; letter-spacing: 1px; color: var(--accent-blue); }
+
+        .nav-links { flex-grow: 1; }
+        .nav-item {
+            padding: 15px 25px;
+            display: flex;
+            align-items: center;
+            color: var(--text-dim);
+            text-decoration: none;
+            transition: 0.3s;
+            border-left: 3px solid transparent;
+        }
+        .nav-item:hover, .nav-item.active {
+            background: rgba(52, 152, 219, 0.1);
+            color: var(--text-main);
+            border-left-color: var(--accent-blue);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .user-profile { font-size: 0.9rem; color: var(--text-dim); }
+        .user-profile b { color: var(--text-main); }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: var(--glow);
+        }
+
+        /* Circular Progress Visuals */
+        .circle-stat {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 5px solid var(--accent-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            box-shadow: inset 0 0 10px rgba(52, 152, 219, 0.5);
+        }
+
+        .stat-label { color: var(--text-dim); font-size: 0.85rem; text-transform: uppercase; }
+
+        /* Bottom Section */
+        .dashboard-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 25px;
+        }
+
+        .action-card {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 15px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4); }
+
+        .logout-link { color: #e74c3c; text-decoration: none; font-size: 0.9rem; margin-top: auto; padding: 20px 25px; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="brand">
+            <img src="{{ url_for('static', filename='images/eye.png') }}" alt="Logo">
+            <span>OCULARIS</span>
+        </div>
+        <nav class="nav-links">
+            <a href="{{ url_for('dashboard') }}" class="nav-item active">Dashboard</a>
+            <a href="{{ url_for('upload') }}" class="nav-item">New Upload</a>
+            <a href="{{ url_for('upload') }}" class="nav-item">Results </a>
+            <a href="#" class="nav-item">Settings</a>
+        </nav>
+        <a href="{{ url_for('logout') }}" class="logout-link">Log Out</a>
+    </div>
+
+    <div class="main-content">
+        <div class="top-bar">
+            <div>
+                <h1 style="margin:0;">System Overview</h1>
+                <p style="color:var(--text-dim); margin:5px 0 0;">Welcome back, <b>Dr. {{ user[0] }}</b></p>
+            </div>
+            <div class="user-profile">
+                Hospital: <b>{{ user[2] if user[2] else 'General Hospital' }}</b>
+            </div>
+        </div>
+
+    
+
+        <div class="dashboard-row">
+            <div class="action-card">
+                <h3>Quick Analysis</h3>
+                <p style="color:var(--text-dim)">Upload a new funduscopic retinal scan for immediate disease recognition.</p>
+                <br>
+                <a href="{{ url_for('upload') }}" class="btn-primary">Initiate New Scan</a>
+            </div>
+
+            <div class="action-card">
+                <h3>Doctor Profile</h3>
+                <p style="font-size:0.9rem;">
+                    <span style="color:var(--text-dim)">Specialty:</span><br>
+                    {{ user[1] if user[1] else 'Ophthalmologist' }}
+                </p>
+                <p style="font-size:0.9rem;">
+                    <span style="color:var(--text-dim)">License:</span><br>
+                    #OCU-2026-{{ user[0][:3] | upper }}
+                </p>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

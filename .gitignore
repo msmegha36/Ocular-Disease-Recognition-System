@@ -1,0 +1,38 @@
+# Static & uploaded files
+# But keep CS
+# Static ignore everything except CSS
+static/*
+!static/css/
+!static/css/*.css
+uploads/
+media/
+images/
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.mp4
+*.avi
+
+# ML model files (optional)
+*.h5
+*.keras
+*.pt
+*.pth
+
+# Virtual environment
+venv/
+env/
+
+# Database files
+*.db
+*.sqlite3
+
+# Python cache
+__pycache__/
+*.pyc
+
+
+# Debug / temp files
+allfiles.txt
+sammp.txt
