@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ocularis | Scan History</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-dark: #0b0e14;
+            --sidebar-bg: #1a1a2e;
+            --accent-blue: #2563eb;
+            --text-main: #1e293b;
+            --text-dim: #64748b;
+            --white: #ffffff;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            display: flex;
+        }
+
+        /* SIDEBAR (NAVBAR) */
+        .sidebar {
+            width: 250px;
+            height: 100vh;
+            background-color: var(--sidebar-bg);
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            color: #cfd8ff;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .logo img {
+            height: 40px;
+        }
+
+        .logo span {
+            font-weight: 800;
+            font-size: 1.2rem;
+            margin-left: 12px;
+            letter-spacing: 1px;
+            color: var(--white);
+        }
+
+        .nav-links {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .nav-item {
+            color: #cfd8ff;
+            text-decoration: none;
+            font-size: 1rem;
+            padding: 12px 15px;
+            border-radius: 8px;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--white);
+        }
+
+        .nav-item.active {
+            background: var(--accent-blue);
+            color: var(--white);
+        }
+
+        .logout-link {
+            margin-top: auto;
+            color: #ff4d4d;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 12px 15px;
+            border-radius: 8px;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logout-link:hover {
+            background: rgba(255, 77, 77, 0.1);
+        }
+
+        /* MAIN CONTENT AREA */
+        .main-content {
+            margin-left: 250px; 
+            padding: 40px;
+            width: calc(100% - 250px);
+            min-height: 100vh;
+        }
+
+        .header-section {
+            margin-bottom: 30px;
+        }
+
+        .header-section h1 {
+            font-size: 1.8rem;
+            color: var(--text-main);
+            font-weight: 700;
+        }
+
+        .header-section p {
+            color: var(--text-dim);
+            margin-top: 5px;
+        }
+
+        /* DATA TABLE */
+        .table-container {
+            background: var(--white);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        .history-table th {
+            background: #f1f5f9;
+            padding: 15px 20px;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-dim);
+            font-weight: 600;
+        }
+
+        .history-table td {
+            padding: 18px 20px;
+            border-top: 1px solid #f1f5f9;
+            font-size: 0.95rem;
+            color: var(--text-main);
+        }
+
+        .history-table tr:hover {
+            background-color: #f8fafc;
+        }
+
+        /* STATUS BADGE */
+        .badge {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            background: #e0f2fe;
+            color: #0369a1;
+        }
+
+        /* VIEW BUTTON */
+        .btn-view {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--accent-blue);
+            color: var(--white);
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: 0.2s;
+        }
+
+        .btn-view:hover {
+            background: #1d4ed8;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        }
+
+        .no-data {
+            padding: 60px;
+            text-align: center;
+            color: var(--text-dim);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="logo">
+            <img src="{{ url_for('static', filename='images/eye.png') }}" alt="Logo">
+            <span>OCULARIS</span>
+        </div>
+
+        <nav class="nav-links">
+            <a href="{{ url_for('dashboard') }}" class="nav-item">
+                <i class="fa-solid fa-house"></i> Dashboard
+            </a>
+            <a href="{{ url_for('upload') }}" class="nav-item">
+                <i class="fa-solid fa-file-upload"></i> New Upload
+            </a>
+            <a href="{{ url_for('history') }}" class="nav-item active">
+                <i class="fa-solid fa-clock-rotate-left"></i> Results History
+            </a>
+        </nav>
+
+        <a href="{{ url_for('logout') }}" class="logout-link">
+            <i class="fa-solid fa-right-from-bracket"></i> Logout
+        </a>
+    </div>
+
+    <div class="main-content">
+        <div class="header-section">
+            <h1>Diagnostic History</h1>
+            <p>Review and manage all previous funduscopic retinal scans.</p>
+        </div>
+
+        <div class="table-container">
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Date & Time</th>
+                        <th>Patient ID</th>
+                        <th>Patient Name</th>
+                        <th>Primary Finding</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if history %}
+                        {% for row in history %}
+                        <tr>
+                            <td style="color: var(--text-dim);">{{ row.timestamp }}</td>
+                            <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 4px;">{{ row.patient_id }}</code></td>
+                            <td style="font-weight: 600;">{{ row.patient_name }}</td>
+                            <td><span class="badge">{{ row.overall_findings }}</span></td>
+                            <td>
+                                <a href="{{ url_for('view_result', record_id=row.id) }}" class="btn-view">
+                                    <i class="fa-solid fa-eye"></i> View Report
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="no-data">
+                                <i class="fa-solid fa-folder-open" style="font-size: 2.5rem; display: block; margin-bottom: 15px; opacity: 0.5;"></i>
+                                No scan records found in the database.
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</body>
+</html>

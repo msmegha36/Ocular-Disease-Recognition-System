@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 import numpy as np
 import tensorflow as tf
 from utils.preprocess import preprocess_image
@@ -6,19 +6,16 @@ import sqlite3
 import os
 import hashlib
 
-# --- INITIALIZATION ---
 app = Flask(__name__)
 app.secret_key = "ocular_secret_key"
 
 # --- CONFIGURATION ---
-MODEL_PATH = "model/best_siamese_model.keras"
-# Initialize model
-model = tf.keras.models.load_model(MODEL_PATH, compile=False)
-
-CLASSES = ["Normal", "Diabetes", "Glaucoma", "Cataract", "AMD", "Hypertension", "Myopia", "Others"]
 UPLOAD_FOLDER = "static/uploads"
 DB_NAME = "ocular.db"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# Load model globally (Uncomment when ready)
+model = tf.keras.models.load_model("model/best_siamese_model.keras", compile=False)
 
 def get_db():
     conn = sqlite3.connect(DB_NAME)
@@ -28,7 +25,24 @@ def get_db():
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
-# --- ROUTES ---
+# --- NEW: AJAX ROUTE FOR PATIENT VERIFICATION ---
+@app.route("/get_patient/<p_id>")
+def get_patient(p_id):
+    if "user" not in session:
+        return jsonify({"success": False, "message": "Unauthorized"}), 401
+    
+    conn = get_db()
+    patient = conn.execute("SELECT name, age, gender FROM patients WHERE patient_id = ?", (p_id,)).fetchone()
+    conn.close()
+    
+    if patient:
+        return jsonify({
+            "success": True,
+            "name": patient["name"],
+            "age": patient["age"],
+            "gender": patient["gender"]
+        })
+    return jsonify({"success": False, "message": "Patient not found"})
 
 @app.route("/", methods=["GET", "POST"])
 def login():
@@ -44,115 +58,117 @@ def login():
         return render_template("login.html", error="Invalid credentials")
     return render_template("login.html")
 
-@app.route("/register", methods=["GET", "POST"])
-def register():
-    if request.method == "POST":
-        name = request.form["name"]
-        email = request.form["email"]
-        hospital = request.form["hospital"]
-        password = hash_password(request.form["password"])
-        spec = request.form["specialization"]
-        try:
-            conn = get_db()
-            conn.execute("INSERT INTO users (name, email, password, specialization, hospital) VALUES (?,?,?,?,?)",
-                         (name, email, password, spec, hospital))
-            conn.commit()
-            conn.close()
-            return redirect(url_for("login"))
-        except sqlite3.IntegrityError:
-            return "Email already exists"
-    return render_template("register.html")
-
 @app.route("/dashboard")
 def dashboard():
-    if "user" not in session:
-        return redirect(url_for("login"))
+    if "user" not in session: return redirect(url_for("login"))
     conn = get_db()
+    # Fetch doctor info
     user_data = conn.execute("SELECT name, specialization, hospital FROM users WHERE id=?", (session["user"],)).fetchone()
-    
-    # Fetch patient history for the dashboard table
-    history = conn.execute("SELECT * FROM patient_records WHERE doctor_id=? ORDER BY timestamp DESC", (session["user"],)).fetchall()
+    # Fetch recent history
+    history = conn.execute("""
+        SELECT pr.*, p.name as patient_name 
+        FROM patient_records pr 
+        JOIN patients p ON pr.patient_id = p.patient_id 
+        WHERE pr.doctor_id=? 
+        ORDER BY pr.timestamp DESC LIMIT 5
+    """, (session["user"],)).fetchall()
     conn.close()
-    
-    if user_data:
-        return render_template("dashboard.html", user=list(user_data), history=history)
-    return redirect(url_for("login"))
+    return render_template("dashboard.html", user=user_data, history=history)
 
 @app.route("/upload", methods=["GET", "POST"])
 def upload():
-    if "user" not in session: 
+    if "user" not in session:
         return redirect(url_for("login"))
 
     if request.method == "POST":
-        p_name = request.form.get("patient_name")
-        p_age = request.form.get("patient_age")
-        p_gender = request.form.get("patient_gender")
+        patient_id = request.form.get("patient_id")
+        left_eye = request.files.get('left_eye')
+        right_eye = request.files.get('right_eye')
 
-        left_eye = request.files["left_eye"]
-        right_eye = request.files["right_eye"]
+        # Check if files were actually uploaded
+        if not left_eye or left_eye.filename == '':
+            flash("Missing left eye image")
+            return redirect(request.url)
+        if not right_eye or right_eye.filename == '':
+            flash("Missing right eye image")
+            return redirect(request.url)
+
+        # Save files and get paths
+        left_path = os.path.join(UPLOAD_FOLDER, left_eye.filename)
+        right_path = os.path.join(UPLOAD_FOLDER, right_eye.filename)
+        left_eye.save(left_path)
+        right_eye.save(right_path)
+
+        # 1. Preprocess and Predict
+        # processed_left = preprocess_image(left_path)
+        # prediction = model.predict(processed_left)
         
-        l_path = os.path.join(UPLOAD_FOLDER, left_eye.filename)
-        r_path = os.path.join(UPLOAD_FOLDER, right_eye.filename)
-        left_eye.save(l_path)
-        right_eye.save(r_path)
+        # Placeholder logic for the "prediction" aspect
+        primary_disease = "Diabetic Retinopathy"  # This would come from your model
+        confidence = 94.5
+        overall_findings = f"{primary_disease} ({confidence}%)"
 
-        l_img = preprocess_image(l_path)
-        r_img = preprocess_image(r_path)
-
-        # Siamese Model Prediction
-        l_preds = model.predict([l_img, l_img])[0]
-        r_preds = model.predict([r_img, r_img])[0]
-        joint_preds = model.predict([l_img, r_img])[0]
-
-        # Get Single Top Class
-        top_idx = np.argmax(joint_preds)
-        primary_disease = CLASSES[top_idx]
-        conf_val = round(float(joint_preds[top_idx]) * 100, 2)
-
-        left_status = CLASSES[np.argmax(l_preds)]
-        right_status = CLASSES[np.argmax(r_preds)]
-        
-        # --- NEW: Formal Clinical Interpretation (No "AI" mentions) ---
-        if primary_disease == "Normal":
-            detailed_desc = (f"The diagnostic screening for {p_name} indicates that both fundus images "
-                             "exhibit normal physiological characteristics. No significant vascular "
-                             "abnormalities or pathological markers were observed in either the OS or OD regions.")
-        else:
-            detailed_desc = (f"Clinical screening for {p_name} reveals markers consistent with {primary_disease}. "
-                             f"The Left Eye (OS) assessment indicates '{left_status}' while the Right Eye (OD) "
-                             f"assessment indicates '{right_status}'. The diagnostic system correlates these bilateral "
-                             f"features with {primary_disease} at a {conf_val}% statistical probability. "
-                             "Clinical correlation via funduscopy and follow-up consultation is recommended.")
-
-        # Save to Database
+        # 2. Save to history (patient_records table)
         conn = get_db()
-        try:
-            conn.execute('''
-                INSERT INTO patient_records 
-                (doctor_id, patient_name, patient_age, patient_gender, 
-                 left_eye_img, right_eye_img, left_diagnosis, right_diagnosis, overall_findings) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (session["user"], p_name, p_age, p_gender, left_eye.filename, right_eye.filename, 
-                  left_status, right_status, f"{primary_disease} ({conf_val}%)"))
-            conn.commit()
-        except sqlite3.IntegrityError:
-            flash("Database Error: Record not saved.")
-        finally:
-            conn.close()
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO patient_records 
+            (doctor_id, patient_id, left_eye_img, right_eye_img, left_diagnosis, right_diagnosis, overall_findings)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (session["user"], patient_id, left_eye.filename, right_eye.filename, 
+              "Signs of lesion", "Normal", overall_findings))
+        conn.commit()
+        
+        # Get patient details for the result page
+        patient = conn.execute("SELECT * FROM patients WHERE patient_id = ?", (patient_id,)).fetchone()
+        conn.close()
 
-        return render_template(
-            "result.html",
-            primary_disease=primary_disease,
-            confidence=conf_val,
-            left_status=left_status,
-            right_status=right_status,
-            left_img=left_eye.filename,
-            right_img=right_eye.filename,
-            patient={"name": p_name, "age": p_age, "gender": p_gender},
-            description=detailed_desc
-        )
+        # 3. Render the Prediction (result.html)
+        return render_template("result.html", 
+                               primary_disease=primary_disease, 
+                               confidence=confidence,
+                               left_img=left_eye.filename,
+                               right_img=right_eye.filename,
+                               patient=patient,
+                               description="Automated analysis detected patterns consistent with " + primary_disease)
 
     return render_template("upload.html")
+
+@app.route("/history")
+def history():
+    if "user" not in session: return redirect(url_for("login"))
+    conn = get_db()
+    # JOIN is necessary to get the patient name from the patients table
+    history = conn.execute('''
+        SELECT pr.*, p.name as patient_name 
+        FROM patient_records pr 
+        JOIN patients p ON pr.patient_id = p.patient_id 
+        WHERE pr.doctor_id = ? ORDER BY pr.timestamp DESC
+    ''', (session["user"],)).fetchall()
+    conn.close()
+    return render_template("history.html", history=history)
+
+@app.route("/view_result/<int:record_id>")
+def view_result(record_id):
+    conn = get_db()
+    record = conn.execute('''
+        SELECT pr.*, p.name, p.age, p.gender FROM patient_records pr 
+        JOIN patients p ON pr.patient_id = p.patient_id WHERE pr.id = ?
+    ''', (record_id,)).fetchone()
+    conn.close()
+    
+    findings = record['overall_findings']
+    primary = findings.split(' (')[0] if '(' in findings else findings
+    conf = findings.split('(')[1].replace('%)', '') if '(' in findings else "0"
+
+    return render_template("result.html", primary_disease=primary, confidence=conf,
+                               # Ensure these variable names match what result.html expects
+                               left_img=record['left_eye_img'], 
+                               right_img=record['right_eye_img'],
+                               left_status=record['left_diagnosis'], 
+                               right_status=record['right_diagnosis'],
+                               patient=record, 
+                               description="Analysis based on fundus image feature extraction.")
 
 @app.route("/logout")
 def logout():

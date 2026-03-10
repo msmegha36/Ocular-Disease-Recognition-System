@@ -1,33 +1,38 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Create Account</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account | Medical Portal</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
 </head>
 <body>
 
-<div class="login-box" style="width:480px;">
+<div class="login-container">
+    <div class="login-box">
+        <div class="logo">
+            <img src="{{ url_for('static', filename='images/eye.png') }}" alt="Logo">
+        </div>
 
-    <div class="logo">
-        <img src="{{ url_for('static', filename='images/eye.png') }}">
+        <h1>Create Account</h1>
+        <p class="tagline">Doctor Registration</p>
+
+        <form method="POST">
+            <div class="input-group">
+                <input type="text" name="name" placeholder="Full Name" required>
+                <input type="email" name="email" placeholder="Email Address" required>
+                <input type="password" name="password" placeholder="Create Password" required>
+                <input type="text" name="specialization" placeholder="Medical Specialization">
+                <input type="text" name="hospital" placeholder="Hospital/Clinic Name">
+            </div>
+
+            <button type="submit">Register Account</button>
+        </form>
+
+        <div class="links">
+            <a href="/">← Back to Login</a>
+        </div>
     </div>
-
-    <h1>Create Account</h1>
-    <p class="tagline">Doctor Registration</p>
-
-    <form method="POST">
-        <input type="text" name="name" placeholder="Doctor Name" required>
-        <input type="email" name="email" placeholder="Email" required>
-        <input type="password" name="password" placeholder="Password" required>
-        <input type="text" name="specialization" placeholder="Specialization">
-        <input type="text" name="hospital" placeholder="Hospital">
-
-        <button type="submit">Register</button>
-    </form>
-
-    <br>
-    <a href="/" style="color:#cfd8ff;">← Back to Login</a>
-
 </div>
 
 </body>
