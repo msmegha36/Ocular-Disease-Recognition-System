@@ -1,15 +1,30 @@
-<nav class="nav-links">
-    <a href="{{ url_for('dashboard') }}" class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
-        <i class="fa-solid fa-house"></i> Dashboard
-    </a>
-    <a href="{{ url_for('upload') }}" class="nav-item {% if request.endpoint == 'upload' %}active{% endif %}">
-        <i class="fa-solid fa-file-upload"></i> New Upload
-    </a>
-    <a href="{{ url_for('history') }}" class="nav-item {% if request.endpoint == 'history' %}active{% endif %}">
-        <i class="fa-solid fa-clock-rotate-left"></i> Results History
-    </a>
-    
-    <a href="{{ url_for('logout') }}" class="logout-link" style="margin-top: auto;">
-        <i class="fa-solid fa-right-from-bracket"></i> Logout
-    </a>
+<nav class="nav-container">
+    <div class="nav-menu">
+        <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
+            <i class="fa-solid fa-house"></i>
+            <span>Dashboard</span>
+        </a>
+
+        <a href="{{ url_for('upload') }}" class="nav-link {% if request.endpoint == 'upload' %}active{% endif %}">
+            <i class="fa-solid fa-magnifying-glass-chart"></i>
+            <span>New Analysis</span>
+        </a>
+
+        <a href="{{ url_for('history') }}" class="nav-item {% if request.endpoint == 'history' %}active{% endif %}">
+            <i class="fa-solid fa-notes-medical"></i>
+            <span>Patient History</span>
+        </a>
+
+        <a href="#" class="nav-link">
+            <i class="fa-solid fa-gear"></i>
+            <span>Settings</span>
+        </a>
+    </div>
+
+    <div class="nav-footer">
+        <a href="{{ url_for('logout') }}" class="logout-btn">
+            <i class="fa-solid fa-right-from-bracket"></i>
+            <span>Logout</span>
+        </a>
+    </div>
 </nav>

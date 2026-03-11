@@ -4,214 +4,70 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ocularis Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-    /* Clean, Hospital-Standard Palette */
-    --bg-light: #f1f5f9;
-    --sidebar-bg: #ffffff;
-    --card-bg: #ffffff;
-    --primary-blue: #2563eb;
-    --text-main: #1e293b;
-    --text-dim: #64748b;
-    --border-color: #e2e8f0;
-    --danger: #ef4444;
-}
-
-body {
-    background: var(--bg-light);
-    font-family: 'Inter', sans-serif;
-    color: var(--text-main);
-    margin: 0;
-    display: flex;
-    height: 100vh;
-    overflow: hidden;
-}
-
-/* Sidebar Navigation */
-.sidebar {
-    width: 260px;
-    background-color: var(--sidebar-bg);
-    display: flex;
-    flex-direction: column;
-    padding: 24px 0;
-    border-right: 1px solid var(--border-color);
-}
-
-.brand {
-    padding: 0 25px 35px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.brand img { height: 32px; filter: none; } /* Remove any glow filters */
-.brand span { 
-    font-weight: 700; 
-    font-size: 1.1rem; 
-    letter-spacing: 0.5px; 
-    color: var(--primary-blue); 
-}
-
-.nav-links { flex-grow: 1; }
-.nav-item {
-    padding: 12px 25px;
-    margin: 4px 15px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    color: var(--text-dim);
-    text-decoration: none;
-    font-weight: 500;
-    transition: all 0.2s ease;
-}
-
-.nav-item:hover {
-    background: #f8fafc;
-    color: var(--primary-blue);
-}
-
-.nav-item.active {
-    background: #eff6ff;
-    color: var(--primary-blue);
-}
-
-/* Main Content Area */
-.main-content {
-    flex: 1;
-    padding: 40px;
-    overflow-y: auto;
-}
-
-.top-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 32px;
-}
-
-.top-bar h1 {
-    font-size: 24px;
-    font-weight: 700;
-    color: #0f172a;
-}
-
-.user-profile { 
-    font-size: 0.9rem; 
-    background: white;
-    padding: 8px 16px;
-    border-radius: 20px;
-    border: 1px solid var(--border-color);
-    color: var(--text-dim); 
-}
-
-.user-profile b { color: var(--text-main); }
-
-/* Dashboard Content */
-.dashboard-row {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 24px;
-}
-
-.action-card {
-    background: var(--card-bg);
-    padding: 30px;
-    border-radius: 12px;
-    border: 1px solid var(--border-color);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-}
-
-.action-card h3 {
-    margin-top: 0;
-    font-size: 18px;
-    color: #0f172a;
-}
-
-/* Primary Button */
-.btn-primary {
-    background: var(--primary-blue);
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s;
-    text-decoration: none;
-    display: inline-block;
-}
-
-.btn-primary:hover { 
-    background: #1d4ed8;
-    transform: none; /* Removed the "float" effect for a flatter UI */
-}
-
-.logout-link { 
-    color: var(--danger); 
-    text-decoration: none; 
-    font-size: 0.9rem; 
-    font-weight: 600;
-    padding: 20px 25px;
-    margin-top: auto;
-    border-top: 1px solid var(--border-color);
-}
-
-.logout-link:hover {
-    background: #fff1f0;
-}
-    </style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
 
-    <div class="sidebar">
-        <div class="brand">
-            <img src="{{ url_for('static', filename='images/eye.png') }}" alt="Logo">
-            <span>OCULARIS</span>
+    <div class="sidebar d-flex flex-column py-4">
+        <div class="brand px-4 mb-4 d-flex align-items-center gap-2">
+            <img src="{{ url_for('static', filename='images/eye.png') }}" alt="Logo" height="32">
+            <span class="fw-bold text-primary">OCULARIS</span>
         </div>
-        <nav class="nav-links">
-            <a href="{{ url_for('dashboard') }}" class="nav-item active">Dashboard</a>
-            <a href="{{ url_for('upload') }}" class="nav-item">New Upload</a>
-            <a href="{{ url_for('history') }}" class="nav-item">Results </a>
-            <a href="#" class="nav-item">Settings</a>
-        </nav>
-        <a href="{{ url_for('logout') }}" class="logout-link">Log Out</a>
+        
+        {% include 'navbar.html' %}
+        
+        <a href="{{ url_for('logout') }}" class="logout-link mt-auto p-4 text-danger text-decoration-none border-top fw-bold">
+            Log Out
+        </a>
     </div>
 
-    <div class="main-content">
-        <div class="top-bar">
-            <div>
-                <h1 style="margin:0;">System Overview</h1>
-                <p style="color:var(--text-dim); margin:5px 0 0;">Welcome back, <b>Dr. {{ user[0] }}</b></p>
+    <main class="main-content">
+        <div class="container-fluid">
+            <div class="row mb-5 align-items-center">
+                <div class="col-sm-6">
+                    <h1 class="h3 fw-bold m-0 text-dark">System Overview</h1>
+                    <p class="text-muted mt-1">Welcome back, <b>Dr. {{ user[0] }}</b></p>
+                </div>
+                <div class="col-sm-6 text-sm-end">
+                    <div class="d-inline-block bg-white border px-3 py-2 rounded-pill shadow-sm">
+                        <small class="text-muted">Hospital:</small> 
+                        <b class="text-dark">{{ user[2] if user[2] else 'General Hospital' }}</b>
+                    </div>
+                </div>
             </div>
-            <div class="user-profile">
-                Hospital: <b>{{ user[2] if user[2] else 'General Hospital' }}</b>
+
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <div class="medical-card">
+                        <h3 class="h5 fw-bold mb-3">Quick Analysis</h3>
+                        <p class="text-muted">Upload a new funduscopic retinal scan for immediate disease recognition using our Siamese Network model.</p>
+                        <div class="mt-4">
+                            <a href="{{ url_for('upload') }}" class="btn btn-primary px-4 py-2 fw-semibold">
+                                Initiate New Scan
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="medical-card">
+                        <h3 class="h5 fw-bold mb-4">Doctor Profile</h3>
+                        <div class="mb-3">
+                            <label class="d-block small text-muted text-uppercase fw-bold">Specialty</label>
+                            <span class="text-dark">{{ user[1] if user[1] else 'Ophthalmologist' }}</span>
+                        </div>
+                        <div class="mb-3">
+                            <label class="d-block small text-muted text-uppercase fw-bold">License ID</label>
+                            <span class="font-monospace text-dark">#OCU-2026-{{ user[0][:3] | upper }}</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
+    </main>
 
-    
-
-        <div class="dashboard-row">
-            <div class="action-card">
-                <h3>Quick Analysis</h3>
-                <p style="color:var(--text-dim)">Upload a new funduscopic retinal scan for immediate disease recognition.</p>
-                <br>
-                <a href="{{ url_for('upload') }}" class="btn-primary">Initiate New Scan</a>
-            </div>
-
-            <div class="action-card">
-                <h3>Doctor Profile</h3>
-                <p style="font-size:0.9rem;">
-                    <span style="color:var(--text-dim)">Specialty:</span><br>
-                    {{ user[1] if user[1] else 'Ophthalmologist' }}
-                </p>
-                <p style="font-size:0.9rem;">
-                    <span style="color:var(--text-dim)">License:</span><br>
-                    #OCU-2026-{{ user[0][:3] | upper }}
-                </p>
-            </div>
-        </div>
-    </div>
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

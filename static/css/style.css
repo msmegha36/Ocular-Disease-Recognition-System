@@ -1,0 +1,173 @@
+/* Custom Hospital Theme Variables */
+:root {
+    --bg-light: #f1f5f9;
+    --sidebar-bg: #ffffff;
+    --card-bg: #ffffff;
+    --primary-blue: #2563eb;
+    --text-main: #1e293b;
+    --text-dim: #64748b;
+    --border-color: #e2e8f0;
+}
+
+body {
+    background-color: var(--bg-light);
+    color: var(--text-main);
+    font-family: 'Inter', sans-serif;
+}
+
+/* Sidebar Styling */
+/* Sidebar Layout */
+.sidebar {
+    width: 260px;
+    height: 100vh;
+    background: #ffffff;
+    border-right: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+}
+
+.nav-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 10px 16px;
+}
+
+.nav-menu {
+    flex-grow: 1;
+}
+
+/* Base Link Style */
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    margin-bottom: 4px;
+    border-radius: 8px;
+    color: #64748b; /* text-dim */
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.nav-link i {
+    font-size: 1.1rem;
+    width: 20px;
+    text-align: center;
+}
+
+/* Hover & Active States */
+.nav-link:hover {
+    background: #f1f5f9;
+    color: #2563eb;
+}
+
+.nav-link.active {
+    background: #eff6ff;
+    color: #2563eb;
+    font-weight: 600;
+}
+
+.nav-link.active i {
+    color: #2563eb;
+}
+
+/* Logout Button Styling */
+.nav-footer {
+    padding-top: 20px;
+    border-top: 1px solid #f1f5f9;
+    margin-bottom: 20px;
+}
+
+.logout-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    color: #ef4444; /* danger red */
+    text-decoration: none;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.logout-btn:hover {
+    background: #fef2f2;
+}
+
+/* Table Specific Styling */
+.table thead th {
+    background-color: #f8fafc;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+    color: var(--text-dim);
+    padding: 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.table tbody td {
+    padding: 16px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.95rem;
+    color: var(--text-main);
+}
+
+/* Patient ID Badge */
+.patient-id-tag {
+    background: #f1f5f9;
+    color: #475569;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-size: 0.85rem;
+}
+
+/* Medical Status Badge */
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: #eff6ff;
+    color: #2563eb;
+    border: 1px solid #dbeafe;
+}
+
+.medical-card {
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+/* Custom Card Classes to complement Bootstrap */
+.medical-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    transition: transform 0.2s;
+}
+
+.medical-card:hover {
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+/* Adjust main content for fixed sidebar */
+.main-content {
+    margin-left: 260px;
+    padding: 30px;
+    width: calc(100% - 260px);
+}
+
+/* Responsive Overrides */
+@media (max-width: 992px) {
+    .sidebar { width: 80px; }
+    .sidebar span, .brand span { display: none; }
+    .main-content { margin-left: 80px; width: calc(100% - 80px); }
+}

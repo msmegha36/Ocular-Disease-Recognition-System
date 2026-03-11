@@ -100,12 +100,18 @@ def upload():
         right_eye.save(right_path)
 
         # 1. Preprocess and Predict
-        # processed_left = preprocess_image(left_path)
-        # prediction = model.predict(processed_left)
+        processed_left, q_left = preprocess_image(left_path)
+        processed_right, q_right = preprocess_image(right_path)
         
-        # Placeholder logic for the "prediction" aspect
-        primary_disease = "Diabetic Retinopathy"  # This would come from your model
-        confidence = 94.5
+        # Ensure the input shape matches your Siamese model's requirement
+        prediction = model.predict([np.expand_dims(processed_left, 0), np.expand_dims(processed_right, 0)])
+        
+        # Map the prediction to your disease classes
+        classes = ["Normal", "Diabetic Retinopathy", "Glaucoma", "Cataract"]
+        class_idx = np.argmax(prediction[0])
+        primary_disease = classes[class_idx]
+        confidence = round(float(np.max(prediction[0]) * 100), 2)
+        
         overall_findings = f"{primary_disease} ({confidence}%)"
 
         # 2. Save to history (patient_records table)
@@ -132,6 +138,7 @@ def upload():
                                patient=patient,
                                description="Automated analysis detected patterns consistent with " + primary_disease)
 
+    # This handles the initial GET request to show the page
     return render_template("upload.html")
 
 @app.route("/history")
