@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Account | Medical Portal</title>
+    <title>Create Account | Ocularis</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
 </head>
 <body>
-
 <div class="login-container">
     <div class="login-box">
         <div class="logo">
@@ -19,21 +18,27 @@
 
         <form method="POST">
             <div class="input-group">
-                <input type="text" name="name" placeholder="Full Name" required>
-                <input type="email" name="email" placeholder="Email Address" required>
-                <input type="password" name="password" placeholder="Create Password" required>
-                <input type="text" name="specialization" placeholder="Medical Specialization">
-                <input type="text" name="hospital" placeholder="Hospital/Clinic Name">
+                <input type="text" name="name" placeholder="FULL NAME" required>
             </div>
-
-            <button type="submit">Register Account</button>
+            <div class="input-group">
+                <input type="email" name="email" placeholder="EMAIL ADDRESS" required>
+            </div>
+            <div class="input-group">
+                <input type="password" name="password" placeholder="CREATE PASSWORD" required>
+            </div>
+            <div class="input-group">
+                <input type="text" name="specialization" placeholder="MEDICAL SPECIALIZATION">
+            </div>
+            <div class="input-group">
+                <input type="text" name="hospital" placeholder="HOSPITAL/CLINIC NAME">
+            </div>
+            <button type="submit">REGISTER ACCOUNT</button>
         </form>
 
         <div class="links">
-            <a href="/">← Back to Login</a>
+            <a href="{{ url_for('login') }}">← Back to Login</a>
         </div>
     </div>
 </div>
-
 </body>
 </html>

@@ -35,6 +35,8 @@ def init_db():
         left_diagnosis TEXT,
         right_diagnosis TEXT,
         overall_findings TEXT,
+        left_heatmap TEXT,      -- NEW: Store left eye heatmap path
+        right_heatmap TEXT,     -- NEW: Store right eye heatmap path
         timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (doctor_id) REFERENCES users (id),
         FOREIGN KEY (patient_id) REFERENCES patients (patient_id)
@@ -43,7 +45,7 @@ def init_db():
 
     conn.commit()
     conn.close()
-    print("Database Initialized Successfully.")
+    print("Database Initialized with Heatmap Support.")
 
 if __name__ == "__main__":
     init_db()

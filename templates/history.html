@@ -16,7 +16,6 @@
             <img src="{{ url_for('static', filename='images/eye.png') }}" alt="Logo" height="32">
             <span class="fw-bold text-primary">OCULARIS</span>
         </div>
-        
         {% include 'navbar.html' %}
     </div>
 
@@ -34,41 +33,83 @@
                     <table class="table table-hover align-middle mb-0">
                         <thead>
                             <tr>
-                                <th class="ps-4">Date & Time</th>
-                                <th>Patient ID</th>
+                                <th class="ps-4" style="width: 200px;">Patient ID</th>
                                 <th>Patient Name</th>
-                                <th>Primary Finding</th>
-                                <th class="text-end pe-4">Action</th>
+                                <th>Records</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% if history %}
-                                {% for row in history %}
-                                <tr>
-                                    <td class="ps-4 text-muted small">{{ row.timestamp }}</td>
-                                    <td><code class="patient-id-tag">{{ row.patient_id }}</code></td>
-                                    <td class="fw-semibold">{{ row.patient_name }}</td>
-                                    <td>
-                                        <span class="status-badge">{{ row.overall_findings }}</span>
+                            {% if grouped_history %}
+                              {% for p_id, data in grouped_history.items() %}
+                              <tr class="table-light">
+                                  <td><code class="patient-id-tag">{{ p_id }}</code></td>
+                                  <td class="fw-bold">{{ data.name }}</td>
+                                  <td colspan="3">
+                                     <span class="badge bg-secondary rounded-pill">
+                                       {{ data.scans|length }} Total Reports
+                                     </span>
                                     </td>
                                     <td class="text-end pe-4">
-                                        <a href="{{ url_for('view_result', record_id=row.id) }}" class="btn btn-sm btn-outline-primary px-3 rounded-pill">
-                                            <i class="fa-solid fa-file-waveform me-1"></i> View Report
-                                        </a>
+                                     <button class="btn btn-sm btn-primary rounded-pill px-3" type="button" 
+                                         data-bs-toggle="collapse" data-bs-target="#scans-{{ p_id }}">
+                                      <i class="fa-solid fa-chevron-down me-1"></i> View All Scans
+                                     </button>
                                     </td>
-                                </tr>
-                                {% endfor %}
-                            {% else %}
-                                <tr>
-                                    <td colspan="5" class="text-center py-5">
-                                        <div class="text-muted">
-                                            <i class="fa-solid fa-folder-open mb-3 opacity-25" style="font-size: 3rem;"></i>
-                                            <p>No scan records found in the database.</p>
-                                        </div>
-                                    </td>
-                                </tr>
-                            {% endif %}
+                              </tr>
+        
+                              <tr class="collapse" id="scans-{{ p_id }}">
+                                 <td colspan="7" class="p-0 border-0">
+                                  <div class="px-4 py-2 bg-white">
+                                   <table class="table table-sm table-borderless m-0 mb-3 shadow-sm rounded">
+                                     <thead class="bg-light small text-uppercase">
+                               <tr>
+                                <th class="ps-3">Scan Date</th>
+                                <th>Left Eye (OS)</th>
+                                <th>Right Eye (OD)</th>
+                                <th>Overall Result</th>
+                                <th class="text-end pe-3">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for scan in data.scans %}
+                            <tr class="border-top">
+                                <td class="ps-3 small text-muted">{{ scan.timestamp }}</td>
+                                <td>
+                                    <span class="badge {% if scan.left_diagnosis == 'Normal' %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                                        {{ scan.left_diagnosis }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge {% if scan.right_diagnosis == 'Normal' %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                                        {{ scan.right_diagnosis }}
+                                    </span>
+                                </td>
+                                <td><span class="status-badge">{{ scan.overall_findings }}</span></td>
+                                <td class="text-end pe-3">
+                                    <a href="{{ url_for('view_result', record_id=scan.id) }}" 
+                                       class="btn btn-xs btn-outline-dark py-0" style="font-size: 12px;">
+                                        Open Report
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
                         </tbody>
+                    </table>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+    {% else %}
+        <tr>
+            <td colspan="7" class="text-center py-5">
+                <div class="text-muted">
+                    <i class="fa-solid fa-folder-open mb-3 opacity-25" style="font-size: 3rem;"></i>
+                    <p>No scan records found in the database.</p>
+                </div>
+            </td>
+        </tr>
+    {% endif %}
+</tbody>
                     </table>
                 </div>
             </div>

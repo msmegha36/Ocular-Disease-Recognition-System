@@ -1,21 +1,28 @@
 import sqlite3
 
+# Make sure this matches the DB_NAME in your app.py
+DB_NAME = "ocular.db" 
+
 def seed_data():
-    conn = sqlite3.connect("ocular.db")
+    conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     
-    # This adds the specific ID your terminal was looking for
-    test_patient = ("1001", "John Doe", 45, "Male")
+    # Use a list of tuples for multiple patients
+    test_patients = [
+        ("1001", "John Doe", 45, "Male"),
+        ("1002", "Lily James", 35, "Female")
+    ]
     
     try:
-        cursor.execute("""
+        # executemany is required to loop through the list above
+        cursor.executemany("""
             INSERT INTO patients (patient_id, name, age, gender) 
             VALUES (?, ?, ?, ?)
-        """, test_patient)
+        """, test_patients)
         conn.commit()
-        print("Success: Patient '1001' is now in the database.")
+        print(f"Success! Added {cursor.rowcount} patients.")
     except sqlite3.IntegrityError:
-        print("Patient '1001' already exists.")
+        print("Error: One of these IDs (1001 or 1002) already exists in the table.")
     finally:
         conn.close()
 

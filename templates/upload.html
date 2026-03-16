@@ -6,6 +6,7 @@
     <title>Ocularis | Upload Analysis</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <style>
         :root {
             --primary: #2563eb;
@@ -29,48 +30,44 @@
         }
 
         /* SIDEBAR NAVIGATION */
-        .sidebar {
+         .sidebar {
+
             width: var(--sidebar-width);
+
             background: var(--white);
+
             border-right: 1px solid #e2e8f0;
+
             display: flex;
+
             flex-direction: column;
+
             flex-shrink: 0;
+
             padding-bottom: 20px;
+
         }
+
+
 
         .brand {
+
             padding: 30px 25px;
+
             font-size: 1.5rem;
+
             font-weight: 800;
+
             color: var(--primary);
+
             letter-spacing: -0.5px;
+
             display: flex;
+
             align-items: center;
+
             gap: 10px;
-        }
 
-        .nav-links { display: flex; flex-direction: column; flex-grow: 1; }
-
-        .nav-item {
-            padding: 14px 25px;
-            color: var(--text-dim);
-            text-decoration: none;
-            font-weight: 500;
-            border-left: 4px solid transparent;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .nav-item i { width: 20px; font-size: 1.1rem; }
-        .nav-item:hover { background: #f8fafc; color: var(--primary); }
-        .nav-item.active { background: #eff6ff; color: var(--primary); border-left-color: var(--primary); font-weight: 600; }
-
-        .logout-link {
-            margin-top: auto;
-            color: #ef4444 !important;
         }
 
         /* MAIN CONTENT AREA */
@@ -216,17 +213,7 @@
         <div class="brand">
             <i class="fa-solid fa-eye-low-vision"></i> OCULARIS
         </div>
-        <nav class="nav-links">
-            <a href="{{ url_for('dashboard') }}" class="nav-item">
-                <i class="fa-solid fa-chart-line"></i> Dashboard
-            </a>
-            <a href="{{ url_for('upload') }}" class="nav-item active">
-                <i class="fa-solid fa-file-medical"></i> New Upload
-            </a>
-            <a href="{{ url_for('logout') }}" class="nav-item logout-link">
-                <i class="fa-solid fa-right-from-bracket"></i> Logout
-            </a>
-        </nav>
+           {% include 'navbar.html' %}
     </div>
 
     <div class="main-content">
