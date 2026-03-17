@@ -21,6 +21,17 @@
 
     <main class="main-content">
         <div class="container-fluid">
+             {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                  <div class="alert alert-success alert-dismissible fade show shadow-sm border-0" role="alert" style="background-color: #d4edda; color: #155724;">
+                    <strong>Success!</strong> {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                  </div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+            
             <div class="row mb-5 align-items-center">
                 <div class="col-sm-6">
                     <h1 class="h3 fw-bold m-0 text-dark">System Overview</h1>
@@ -42,6 +53,9 @@
                         <div class="mt-4">
                             <a href="{{ url_for('upload') }}" class="btn btn-primary px-4 py-2 fw-semibold">
                                 Initiate New Scan
+                            </a>
+                            <a href="{{ url_for('register_patient') }}" class="btn btn-secondary" style="background-color: #6c757d; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none;">
+                                Register Patient
                             </a>
                         </div>
                     </div>

@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 import numpy as np
 import tensorflow as tf
 from utils.preprocess import preprocess_image
-from utils.heatmap import get_gradcam_heatmap, save_and_display_gradcam
+from utils.heatmap import generate_siamese_heatmap  # Updated name
 import sqlite3
 import os
 import hashlib
@@ -106,44 +106,89 @@ def dashboard():
     conn.close()
     return render_template("dashboard.html", user=user_data, history=history)
 
+@app.route("/register-patient", methods=["GET", "POST"])
+def register_patient():
+    if "user" not in session:
+        return redirect(url_for("login"))
+
+    success = False  # Track if registration worked
+    if request.method == "POST":
+        p_name = request.form.get("name")
+        p_age = request.form.get("age")
+        p_gender = request.form.get("gender")
+        p_phone = request.form.get("phone")
+
+        conn = get_db()
+        try:
+            conn.execute('''
+                INSERT INTO patients (name, age, gender, phone) 
+                VALUES (?, ?, ?, ?)
+            ''', (p_name, p_age, p_gender, p_phone))
+            conn.commit()
+            
+            flash(f"Patient Record for {p_name} created successfully! Redirecting...", "success")
+            success = True 
+        except Exception as e:
+            print(f"Database Error: {e}")
+            flash("Error: Could not register patient.", "danger")
+        finally:
+            conn.close()
+
+    # Pass the success variable to the template
+    return render_template("register_patient.html", success=success)
+
 @app.route("/upload", methods=["GET", "POST"])
 def upload():
     if "user" not in session: 
         return redirect(url_for("login"))
 
     if request.method == "POST":
-        # 1. Collect Form Data
-        p_name = request.form.get("patient_name")
-        p_age = request.form.get("patient_age")
-        p_gender = request.form.get("patient_gender")
-        patient_id = request.form.get("patient_id") # Ensure this is in your form
-
-        left_eye = request.files["left_eye"]
-        right_eye = request.files["right_eye"]
+        # 1. GET DATA FROM FORM FIRST
+        patient_id = request.form.get("patient_id") 
         
-        # 2. Save Original Images
+        # Pull files from the request
+        # This defines 'left_eye' and 'right_eye' so the NameError disappears
+        left_eye = request.files.get("left_eye")
+        right_eye = request.files.get("right_eye")
+
+        # Basic safety check
+        if not left_eye or not right_eye:
+            return "Missing images", 400
+
+        # 2. RE-FETCH PATIENT DETAILS
+        # This prevents the "None" values in the final report
+        conn = get_db()
+        patient_data = conn.execute(
+            "SELECT name, age, gender FROM patients WHERE patient_id = ?", 
+            (patient_id,)
+        ).fetchone()
+        
+        # Provide fallbacks if patient not found
+        p_name = patient_data["name"] if patient_data else "Unknown"
+        p_age = patient_data["age"] if patient_data else "N/A"
+        p_gender = patient_data["gender"] if patient_data else "N/A"
+
+        # 3. SAVE ORIGINAL IMAGES
+        # Using .filename is safe now because left_eye is defined
         l_path = os.path.join(UPLOAD_FOLDER, left_eye.filename)
         r_path = os.path.join(UPLOAD_FOLDER, right_eye.filename)
         left_eye.save(l_path)
         right_eye.save(r_path)
 
-        # 3. Preprocess for Model (512x512, normalized)
+        # 4. PREPROCESS & PREDICT
         l_img_raw, _ = preprocess_image(l_path)
         r_img_raw, _ = preprocess_image(r_path)
         
-        # Add batch dimension: (1, 512, 512, 3)
         l_input = np.expand_dims(l_img_raw, 0)
         r_input = np.expand_dims(r_img_raw, 0)
 
-        # 4. Define 8 ODIR Classes
         CLASSES = ["Normal", "Diabetes", "Glaucoma", "Cataract", "AMD", "Hypertension", "Myopia", "Others"]
 
-        # 5. Three-Pass Prediction (Independent vs. Joint)
-        l_preds = model.predict([l_input, l_input])[0]   # Left vs Left
-        r_preds = model.predict([r_input, r_input])[0]   # Right vs Right
-        joint_preds = model.predict([l_input, r_input])[0] # Joint Analysis
+        # Siamese Three-Pass Prediction
+        l_preds = model.predict([l_input, l_input])[0]
+        r_preds = model.predict([r_input, r_input])[0]
+        joint_preds = model.predict([l_input, r_input])[0]
 
-        # Extract Statuses
         left_status = CLASSES[np.argmax(l_preds)]
         right_status = CLASSES[np.argmax(r_preds)]
         
@@ -151,46 +196,55 @@ def upload():
         primary_disease = CLASSES[top_idx]
         conf_val = round(float(joint_preds[top_idx]) * 100, 2)
 
-        # 6. Generate Heatmaps (Grad-CAM)
+        # 5. GENERATE HEATMAPS
         left_heatmap_path = None
         right_heatmap_path = None
-        
+         # In your app.py upload route:
         try:
-            from utils.heatmap import get_gradcam_heatmap, save_and_display_gradcam
-            
-            # Heatmap for Left Eye (using joint context)
-            h_data_l = get_gradcam_heatmap(l_input, r_input, model, target_side='left')
-            left_heatmap_path = save_and_display_gradcam(l_path, h_data_l, 'left')
+             # Pass the left image into BOTH inputs of the Siamese model.
+             # This effectively "mutes" the right eye influence for this specific heatmap.
+             l_h_raw = generate_siamese_heatmap(l_path, model, target_side='left') 
+    
+             # Do the same for the right side
+             r_h_raw = generate_siamese_heatmap(r_path, model, target_side='right')
 
-            # Heatmap for Right Eye (using joint context)
-            h_data_r = get_gradcam_heatmap(l_input, r_input, model, target_side='right')
-            right_heatmap_path = save_and_display_gradcam(r_path, h_data_r, 'right')
+             # Clean paths as before
+             left_heatmap_path = l_h_raw.replace('static/', '').replace('\\', '/') if l_h_raw else None
+             right_heatmap_path = r_h_raw.replace('static/', '').replace('\\', '/') if r_h_raw else None
         except Exception as e:
-            print(f"Heatmap Error: {e}")
+             print(f"Heatmap Error: {e}")
 
-        # 7. Clinical Interpretation String
+        # 6. FINAL INTERPRETATION & DB SAVE
         detailed_desc = (f"Clinical screening for {p_name} reveals markers consistent with {primary_disease}. "
                          f"Left Eye (OS): {left_status}. Right Eye (OD): {right_status}. "
                          f"Bilateral feature correlation probability: {conf_val}%.")
+        
+        patient_id_val = request.form.get("patient_id")
 
-        # 8. Save to Database
-        conn = get_db()
-        try:
+        try:  # Align this try block with patient_id_val
             conn.execute('''
                 INSERT INTO patient_records 
-                (doctor_id, patient_name, patient_age, patient_gender, 
-                 left_eye_img, right_eye_img, left_diagnosis, right_diagnosis, 
-                 overall_findings, left_heatmap, right_heatmap) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (session["user"], p_name, p_age, p_gender, left_eye.filename, right_eye.filename, 
-                  left_status, right_status, f"{primary_disease} ({conf_val}%)", 
-                  left_heatmap_path, right_heatmap_path))
+                (doctor_id, patient_id, left_eye_img, right_eye_img, left_diagnosis, 
+                 right_diagnosis, overall_findings, left_heatmap, right_heatmap) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                session["user"], 
+                patient_id_val, 
+                left_eye.filename, 
+                right_eye.filename, 
+                left_status, 
+                right_status, 
+                f"{primary_disease} ({conf_val}%)", 
+                left_heatmap_path, 
+                right_heatmap_path
+            ))
             conn.commit()
         except Exception as e:
             print(f"DB Error: {e}")
         finally:
             conn.close()
 
+        # 7. RENDER RESULTS
         return render_template(
             "result.html",
             primary_disease=primary_disease,

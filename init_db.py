@@ -17,10 +17,11 @@ def init_db():
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS patients (
-        patient_id TEXT PRIMARY KEY,
+        patient_id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
         age INTEGER,
         gender TEXT,
+        phone INTEGER,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
     """)
