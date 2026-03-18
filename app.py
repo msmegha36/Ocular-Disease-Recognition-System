@@ -137,6 +137,21 @@ def register_patient():
     # Pass the success variable to the template
     return render_template("register_patient.html", success=success)
 
+@app.route("/patients")
+def list_patients():
+    if "user" not in session: 
+        return redirect(url_for("login"))
+    
+    conn = get_db()
+    # Fetching in descending order of patient_id or created_at
+    patients = conn.execute('''
+        SELECT patient_id,name,age,gender FROM patients 
+        ORDER BY created_at DESC
+    ''').fetchall()
+    conn.close()
+    
+    return render_template("patients.html", patients=patients)    
+
 @app.route("/upload", methods=["GET", "POST"])
 def upload():
     if "user" not in session: 

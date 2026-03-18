@@ -3,74 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ocularis Dashboard</title>
+    <title>Ocularis | Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-
-    <div class="sidebar d-flex flex-column py-4">
-        <div class="brand px-4 mb-4 d-flex align-items-center gap-2">
-            <img src="{{ url_for('static', filename='images/eye.png') }}" alt="Logo" height="32">
-            <span class="fw-bold text-primary">OCULARIS</span>
-        </div>
-        
-        {% include 'navbar.html' %}
-    </div>
+    
+    {% include 'navbar.html' %}
 
     <main class="main-content">
         <div class="container-fluid">
-             {% with messages = get_flashed_messages(with_categories=true) %}
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
               {% if messages %}
                 {% for category, message in messages %}
-                  <div class="alert alert-success alert-dismissible fade show shadow-sm border-0" role="alert" style="background-color: #d4edda; color: #155724;">
-                    <strong>Success!</strong> {{ message }}
+                  <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 mb-4" role="alert">
+                    <i class="fa-solid fa-circle-check me-2"></i> {{ message }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                   </div>
                 {% endfor %}
               {% endif %}
             {% endwith %}
             
-            <div class="row mb-5 align-items-center">
-                <div class="col-sm-6">
+            <div class="row mb-4 align-items-center">
+                <div class="col-md-6">
                     <h1 class="h3 fw-bold m-0 text-dark">System Overview</h1>
-                    <p class="text-muted mt-1">Welcome back, <b>Dr. {{ user[0] }}</b></p>
+                    <p class="text-muted mt-1">Welcome back, <span class="text-primary fw-semibold">Dr. {{ user[0] }}</span></p>
                 </div>
-                <div class="col-sm-6 text-sm-end">
-                    <div class="d-inline-block bg-white border px-3 py-2 rounded-pill shadow-sm">
-                        <small class="text-muted">Hospital:</small> 
+                <div class="col-md-6 text-md-end">
+                    <div class="d-inline-flex align-items-center bg-white border px-3 py-2 rounded-3 shadow-sm">
+                        <i class="fa-solid fa-hospital text-primary me-2"></i>
+                        <small class="text-muted me-2">Facility:</small> 
                         <b class="text-dark">{{ user[2] if user[2] else 'General Hospital' }}</b>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4 mb-5">
+                <div class="col-md-4">
+                    <div class="medical-card p-4 d-flex align-items-center bg-white shadow-sm border-0">
+                        <div class="rounded-circle bg-primary bg-opacity-10 p-3 me-3">
+                            <i class="fa-solid fa-user-plus text-primary fs-4"></i>
+                        </div>
+                        <div>
+                            <p class="text-muted small mb-0 fw-bold text-uppercase">Registration</p>
+                            <a href="{{ url_for('register_patient') }}" class="text-decoration-none text-dark fw-bold h5 mb-0">Add New Patient</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="medical-card p-4 d-flex align-items-center bg-white shadow-sm border-0">
+                        <div class="rounded-circle bg-success bg-opacity-10 p-3 me-3">
+                            <i class="fa-solid fa-microscope text-success fs-4"></i>
+                        </div>
+                        <div>
+                            <p class="text-muted small mb-0 fw-bold text-uppercase">Diagnostic</p>
+                            <a href="{{ url_for('upload') }}" class="text-decoration-none text-dark fw-bold h5 mb-0">Run New Analysis</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="medical-card p-4 d-flex align-items-center bg-white shadow-sm border-0">
+                        <div class="rounded-circle bg-info bg-opacity-10 p-3 me-3">
+                            <i class="fa-solid fa-clock-rotate-left text-info fs-4"></i>
+                        </div>
+                        <div>
+                            <p class="text-muted small mb-0 fw-bold text-uppercase">History</p>
+                            <a href="{{ url_for('history') }}" class="text-decoration-none text-dark fw-bold h5 mb-0">View All Scans</a>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <div class="row g-4">
                 <div class="col-lg-8">
-                    <div class="medical-card">
-                        <h3 class="h5 fw-bold mb-3">Quick Analysis</h3>
-                        <p class="text-muted">Upload a new funduscopic retinal scan for immediate disease recognition using our Siamese Network model.</p>
-                        <div class="mt-4">
-                            <a href="{{ url_for('upload') }}" class="btn btn-primary px-4 py-2 fw-semibold">
-                                Initiate New Scan
+                    <div class="medical-card p-4 shadow-sm h-100">
+                        <div class="d-flex align-items-center mb-4">
+                            <div class="bg-primary p-2 rounded text-white me-3">
+                                <i class="fa-solid fa-bolt"></i>
+                            </div>
+                            <h3 class="h5 fw-bold mb-0">Quick Analysis Engine</h3>
+                        </div>
+                        <p class="text-muted mb-4">Our high-accuracy Siamese Network model is ready to assist. Upload a funduscopic retinal scan for automated disease recognition and detailed feature mapping.</p>
+                        
+                        <div class="p-3 bg-light rounded-3 border mb-4">
+                            <div class="row text-center">
+                                <div class="col-4 border-end">
+                                    <small class="text-muted d-block">Model</small>
+                                    <span class="badge bg-dark">Siamese Net</span>
+                                </div>
+                                <div class="col-4 border-end">
+                                    <small class="text-muted d-block">Accuracy</small>
+                                    <span class="text-success fw-bold">~87%</span>
+                                </div>
+                                <div class="col-4">
+                                    <small class="text-muted d-block">Latency</small>
+                                    <span class="text-primary fw-bold">&lt; 2s</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <a href="{{ url_for('upload') }}" class="btn btn-primary px-4 fw-semibold">
+                                <i class="fa-solid fa-arrow-up-from-bracket me-2"></i>Initiate New Scan
                             </a>
-                            <a href="{{ url_for('register_patient') }}" class="btn btn-secondary" style="background-color: #6c757d; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none;">
-                                Register Patient
+                            <a href="{{ url_for('history') }}" class="btn btn-outline-secondary px-4">
+                                Review Records
                             </a>
                         </div>
                     </div>
                 </div>
 
                 <div class="col-lg-4">
-                    <div class="medical-card">
-                        <h3 class="h5 fw-bold mb-4">Doctor Profile</h3>
-                        <div class="mb-3">
-                            <label class="d-block small text-muted text-uppercase fw-bold">Specialty</label>
-                            <span class="text-dark">{{ user[1] if user[1] else 'Ophthalmologist' }}</span>
+                    <div class="medical-card p-4 shadow-sm h-100">
+                        <div class="text-center mb-4">
+                            <div class="bg-secondary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                                <i class="fa-solid fa-user-doctor text-secondary fs-1"></i>
+                            </div>
+                            <h3 class="h5 fw-bold mb-0">Dr. {{ user[0] }}</h3>
+                            <small class="text-muted">{{ user[1] if user[1] else 'Ophthalmologist' }}</small>
                         </div>
+                        
+                        <hr class="my-4 opacity-50">
+
                         <div class="mb-3">
-                            <label class="d-block small text-muted text-uppercase fw-bold">License ID</label>
-                            <span class="font-monospace text-dark">#OCU-2026-{{ user[0][:3] | upper }}</span>
+                            <label class="d-block small text-muted text-uppercase fw-bold mb-1">Specialty</label>
+                            <div class="p-2 bg-light rounded text-dark fw-medium">
+                                <i class="fa-solid fa-stethoscope text-primary me-2"></i>
+                                {{ user[1] if user[1] else 'Retinal Specialist' }}
+                            </div>
+                        </div>
+                        <div class="mb-0">
+                            <label class="d-block small text-muted text-uppercase fw-bold mb-1">Medical License</label>
+                            <div class="p-2 bg-light rounded font-monospace text-dark">
+                                <i class="fa-solid fa-id-card text-primary me-2"></i>
+                                #OCU-2026-{{ user[0][:3] | upper }}
+                            </div>
                         </div>
                     </div>
                 </div>

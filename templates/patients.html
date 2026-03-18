@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Registered Patients</h2>
+        <a href="{{ url_for('register_patient') }}" class="btn btn-primary">+ New Patient</a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Age</th>
+                        <th>Gender</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in patients %}
+                    <tr>
+                        <td><strong>{{ p.patient_id if p.patient_id else 'NULL' }}</strong></td>
+                        <td>{{ p.name }}</td>
+                        <td>{{ p.age }}</td>
+                        <td>{{ p.gender }}</td>
+                        <td>
+                            <a href="{{ url_for('upload', p_id=p.patient_id) }}" class="btn btn-sm btn-outline-success">New Analysis</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

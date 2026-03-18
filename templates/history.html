@@ -5,19 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ocularis | Diagnostic History</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
 
-    <div class="sidebar d-flex flex-column py-4">
-        <div class="brand px-4 mb-4 d-flex align-items-center gap-2">
-            <img src="{{ url_for('static', filename='images/eye.png') }}" alt="Logo" height="32">
-            <span class="fw-bold text-primary">OCULARIS</span>
-        </div>
-        {% include 'navbar.html' %}
-    </div>
+    {% include 'navbar.html' %}
 
     <main class="main-content">
         <div class="container-fluid">
@@ -28,88 +22,101 @@
                 </div>
             </div>
 
-            <div class="medical-card p-0 overflow-hidden">
+            <div class="medical-card p-0 overflow-hidden shadow-sm border">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
-                        <thead>
+                        <thead class="bg-light">
                             <tr>
                                 <th class="ps-4" style="width: 200px;">Patient ID</th>
                                 <th>Patient Name</th>
                                 <th>Records</th>
+                                <th class="text-end pe-4">Action</th> 
                             </tr>
                         </thead>
                         <tbody>
                             {% if grouped_history %}
-                              {% for p_id, data in grouped_history.items() %}
-                              <tr class="table-light">
-                                  <td><code class="patient-id-tag">{{ p_id }}</code></td>
-                                  <td class="fw-bold">{{ data.name }}</td>
-                                  <td colspan="3">
-                                     <span class="badge bg-secondary rounded-pill">
-                                       {{ data.scans|length }} Total Reports
-                                     </span>
+                                {% for p_id, data in grouped_history.items() %}
+                                <tr class="table-light">
+                                    <td class="ps-4"><code class="patient-id-tag">{{ p_id }}</code></td>
+                                    <td class="fw-bold text-dark">{{ data.name }}</td>
+                                    <td>
+                                        <span class="badge bg-secondary rounded-pill">
+                                            {{ data.scans|length }} Total Reports
+                                        </span>
                                     </td>
                                     <td class="text-end pe-4">
-                                     <button class="btn btn-sm btn-primary rounded-pill px-3" type="button" 
-                                         data-bs-toggle="collapse" data-bs-target="#scans-{{ p_id }}">
-                                      <i class="fa-solid fa-chevron-down me-1"></i> View All Scans
-                                     </button>
+                                        <button class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm" type="button" 
+                                                data-bs-toggle="collapse" data-bs-target="#scans-{{ p_id }}">
+                                            <i class="fa-solid fa-chevron-down me-1"></i> View All Scans
+                                        </button>
                                     </td>
-                              </tr>
+                                </tr>
         
-                              <tr class="collapse" id="scans-{{ p_id }}">
-                                 <td colspan="7" class="p-0 border-0">
-                                  <div class="px-4 py-2 bg-white">
-                                   <table class="table table-sm table-borderless m-0 mb-3 shadow-sm rounded">
-                                     <thead class="bg-light small text-uppercase">
-                               <tr>
-                                <th class="ps-3">Scan Date</th>
-                                <th>Left Eye (OS)</th>
-                                <th>Right Eye (OD)</th>
-                                <th>Overall Result</th>
-                                <th class="text-end pe-3">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for scan in data.scans %}
-                            <tr class="border-top">
-                                <td class="ps-3 small text-muted">{{ scan.timestamp }}</td>
-                                <td>
-                                    <span class="badge {% if scan.left_diagnosis == 'Normal' %}bg-success{% else %}bg-warning text-dark{% endif %}">
-                                        {{ scan.left_diagnosis }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="badge {% if scan.right_diagnosis == 'Normal' %}bg-success{% else %}bg-warning text-dark{% endif %}">
-                                        {{ scan.right_diagnosis }}
-                                    </span>
-                                </td>
-                                <td><span class="status-badge">{{ scan.overall_findings }}</span></td>
-                                <td class="text-end pe-3">
-                                    <a href="{{ url_for('view_result', record_id=scan.id) }}" 
-                                       class="btn btn-xs btn-outline-dark py-0" style="font-size: 12px;">
-                                        Open Report
-                                    </a>
-                                </td>
-                            </tr>
-                            {% endfor %}
+                                <tr class="collapse" id="scans-{{ p_id }}">
+                                    <td colspan="4" class="p-0 border-0">
+                                        <div class="px-4 py-4 bg-light border-start border-primary border-4">
+                                            
+                                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                                <h5 class="m-0 fw-bold text-primary" style="font-size: 1rem;">
+                                                    <i class="fa-solid fa-list-check me-2"></i>Detailed Scan History: {{ data.name }}
+                                                </h5>
+                                                <small class="text-secondary fw-bold">Records found: {{ data.scans|length }}</small>
+                                            </div>
+
+                                            <div class="table-responsive">
+                                                <table class="table table-sm table-hover bg-white m-0 shadow-sm rounded border">
+                                                    <thead class="bg-dark text-white small text-uppercase">
+                                                        <tr>
+                                                            <th class="ps-3 py-2">Scan Date</th>
+                                                            <th class="py-2">Left Eye (OS)</th>
+                                                            <th class="py-2">Right Eye (OD)</th>
+                                                            <th class="py-2">Overall Result</th>
+                                                            <th class="text-end pe-3 py-2">Action</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for scan in data.scans %}
+                                                        <tr>
+                                                            <td class="ps-3 small text-muted align-middle">{{ scan.timestamp }}</td>
+                                                            <td class="align-middle">
+                                                                <span class="badge {% if scan.left_diagnosis == 'Normal' %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                                                                    {{ scan.left_diagnosis }}
+                                                                </span>
+                                                            </td>
+                                                            <td class="align-middle">
+                                                                <span class="badge {% if scan.right_diagnosis == 'Normal' %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                                                                    {{ scan.right_diagnosis }}
+                                                                </span>
+                                                            </td>
+                                                            <td class="align-middle">
+                                                                <span class="badge bg-info text-dark" style="font-weight: 600;">{{ scan.overall_findings }}</span>
+                                                            </td>
+                                                            <td class="text-end pe-3 align-middle">
+                                                                <a href="{{ url_for('view_result', record_id=scan.id) }}" 
+                                                                   class="btn btn-xs btn-outline-primary py-1 px-3 fw-bold" style="font-size: 11px;">
+                                                                    View Report
+                                                                </a>
+                                                            </td>
+                                                        </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-5">
+                                        <div class="text-muted">
+                                            <i class="fa-solid fa-folder-open mb-3 opacity-25" style="font-size: 3rem;"></i>
+                                            <p class="fw-medium">No scan records found in the database.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endif %}
                         </tbody>
-                    </table>
-                </div>
-            </td>
-        </tr>
-        {% endfor %}
-    {% else %}
-        <tr>
-            <td colspan="7" class="text-center py-5">
-                <div class="text-muted">
-                    <i class="fa-solid fa-folder-open mb-3 opacity-25" style="font-size: 3rem;"></i>
-                    <p>No scan records found in the database.</p>
-                </div>
-            </td>
-        </tr>
-    {% endif %}
-</tbody>
                     </table>
                 </div>
             </div>
