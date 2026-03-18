@@ -8,26 +8,73 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* Responsive Sidebar Logic */
+        @media (min-width: 992px) {
+            .main-content {
+                margin-left: 260px; /* Adjust based on your sidebar width */
+                padding: 40px;
+            }
+        }
+
+        @media (max-width: 991.98px) {
+            .main-content {
+                margin-left: 0;
+                padding: 80px 15px 30px 15px;
+            }
+            .patient-id-tag {
+                font-size: 0.8rem;
+            }
+        }
+
+        /* Prevent table from being too cramped on mobile */
+        .table-responsive {
+            border-radius: 8px;
+        }
+
+        .mobile-toggle {
+            display: none;
+        }
+
+        @media (max-width: 991.98px) {
+            .mobile-toggle {
+                display: block;
+                position: fixed;
+                top: 15px;
+                left: 15px;
+                z-index: 1100;
+            }
+        }
+        
+        /* Smooth transition for collapse */
+        .collapse.show {
+            background-color: #f8f9fa;
+        }
+    </style>
 </head>
 <body>
+
+    <button class="btn btn-primary mobile-toggle shadow" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu">
+        <i class="fa-solid fa-bars"></i>
+    </button>
 
     {% include 'navbar.html' %}
 
     <main class="main-content">
         <div class="container-fluid">
-            <div class="row mb-4">
-                <div class="col">
+            <div class="row mb-4 gy-2">
+                <div class="col-12 col-md-8">
                     <h1 class="h3 fw-bold m-0 text-dark">Diagnostic History</h1>
-                    <p class="text-muted">Review and manage all previous funduscopic retinal scans.</p>
+                    <p class="text-muted mb-0">Review and manage all previous funduscopic retinal scans.</p>
                 </div>
             </div>
 
-            <div class="medical-card p-0 overflow-hidden shadow-sm border">
+            <div class="medical-card p-0 overflow-hidden shadow-sm border bg-white">
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
+                    <table class="table table-hover align-middle mb-0" style="min-width: 600px;">
                         <thead class="bg-light">
                             <tr>
-                                <th class="ps-4" style="width: 200px;">Patient ID</th>
+                                <th class="ps-4">Patient ID</th>
                                 <th>Patient Name</th>
                                 <th>Records</th>
                                 <th class="text-end pe-4">Action</th> 
@@ -37,34 +84,34 @@
                             {% if grouped_history %}
                                 {% for p_id, data in grouped_history.items() %}
                                 <tr class="table-light">
-                                    <td class="ps-4"><code class="patient-id-tag">{{ p_id }}</code></td>
+                                    <td class="ps-4"><code class="patient-id-tag text-primary fw-bold">{{ p_id }}</code></td>
                                     <td class="fw-bold text-dark">{{ data.name }}</td>
                                     <td>
                                         <span class="badge bg-secondary rounded-pill">
-                                            {{ data.scans|length }} Total Reports
+                                            {{ data.scans|length }} Reports
                                         </span>
                                     </td>
                                     <td class="text-end pe-4">
                                         <button class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm" type="button" 
                                                 data-bs-toggle="collapse" data-bs-target="#scans-{{ p_id }}">
-                                            <i class="fa-solid fa-chevron-down me-1"></i> View All Scans
+                                            <i class="fa-solid fa-chevron-down me-1"></i> <span class="d-none d-sm-inline">View All</span>
                                         </button>
                                     </td>
                                 </tr>
         
                                 <tr class="collapse" id="scans-{{ p_id }}">
                                     <td colspan="4" class="p-0 border-0">
-                                        <div class="px-4 py-4 bg-light border-start border-primary border-4">
+                                        <div class="px-2 px-md-4 py-4 bg-light border-start border-primary border-4">
                                             
-                                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                            <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between mb-3 gap-2">
                                                 <h5 class="m-0 fw-bold text-primary" style="font-size: 1rem;">
-                                                    <i class="fa-solid fa-list-check me-2"></i>Detailed Scan History: {{ data.name }}
+                                                    <i class="fa-solid fa-list-check me-2"></i>Scan History: {{ data.name }}
                                                 </h5>
                                                 <small class="text-secondary fw-bold">Records found: {{ data.scans|length }}</small>
                                             </div>
 
                                             <div class="table-responsive">
-                                                <table class="table table-sm table-hover bg-white m-0 shadow-sm rounded border">
+                                                <table class="table table-sm table-hover bg-white m-0 shadow-sm rounded border" style="min-width: 700px;">
                                                     <thead class="bg-dark text-white small text-uppercase">
                                                         <tr>
                                                             <th class="ps-3 py-2">Scan Date</th>
