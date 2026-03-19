@@ -3,43 +3,162 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Account | Ocularis</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+    <title>Ocularis | Create Account</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary: #2563eb;
+            --text-main: #1e293b;
+            --bg-body: #f8fafc;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-body);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Full Width Navbar */
+        .navbar {
+            background: white !important;
+            padding: 1rem 0;
+            width: 100%;
+        }
+
+        /* Centered Wrapper */
+        .register-wrapper {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem 1rem;
+        }
+
+        .register-box {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            max-width: 500px; /* Slightly wider for registration fields */
+            text-align: center;
+        }
+
+        .form-control {
+            padding: 0.7rem 1rem;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .btn-register {
+            background: var(--primary);
+            color: white;
+            width: 100%;
+            padding: 0.8rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            margin-top: 1rem;
+            transition: 0.3s;
+        }
+
+        .btn-register:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+        }
+
+        footer {
+            background: #0f172a;
+            color: #94a3b8;
+            padding: 2rem 0;
+            width: 100%;
+            margin-top: auto;
+        }
+    </style>
 </head>
 <body>
-<div class="login-container">
-    <div class="login-box">
-        <div class="logo">
-            <img src="{{ url_for('static', filename='images/eye.png') }}" alt="Logo">
+
+    <nav class="navbar navbar-expand-lg shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{{ url_for('index') }}" style="color: var(--primary) !important;">
+                <i class="fa-solid fa-eye me-2"></i>OCULARIS
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link fw-semibold text-dark" href="{{ url_for('index') }}">Home</a></li>
+                </ul>
+            </div>
         </div>
+    </nav>
 
-        <h1>Create Account</h1>
-        <p class="tagline">Doctor Registration</p>
+    <div class="register-wrapper">
+        <div class="register-box">
+            <div class="mb-4">
+                <img src="{{ url_for('static', filename='images/eye.png') }}" alt="Ocularis Logo" style="width: 50px;">
+                <h2 class="fw-extrabold mt-3 mb-1" style="letter-spacing: -1px;">CREATE ACCOUNT</h2>
+                <p class="text-muted small">Medical Professional Registration</p>
+            </div>
 
-        <form method="POST">
-            <div class="input-group">
-                <input type="text" name="name" placeholder="FULL NAME" required>
-            </div>
-            <div class="input-group">
-                <input type="email" name="email" placeholder="EMAIL ADDRESS" required>
-            </div>
-            <div class="input-group">
-                <input type="password" name="password" placeholder="CREATE PASSWORD" required>
-            </div>
-            <div class="input-group">
-                <input type="text" name="specialization" placeholder="MEDICAL SPECIALIZATION">
-            </div>
-            <div class="input-group">
-                <input type="text" name="hospital" placeholder="HOSPITAL/CLINIC NAME">
-            </div>
-            <button type="submit">REGISTER ACCOUNT</button>
-        </form>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                  <div class="alert alert-{% if category == 'success' %}success{% else %}danger{% endif %} py-2 small mb-3">
+                    {{ message }}
+                  </div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
 
-        <div class="links">
-            <a href="{{ url_for('login') }}">← Back to Login</a>
+            <form method="POST">
+                <div class="row g-3">
+                    <div class="col-md-12 text-start">
+                        <label class="form-label small fw-bold text-uppercase text-secondary">Full Name</label>
+                        <input type="text" name="name" class="form-control" placeholder="Dr. Jane Doe" required>
+                    </div>
+                    <div class="col-md-12 text-start">
+                        <label class="form-label small fw-bold text-uppercase text-secondary">Email Address</label>
+                        <input type="email" name="email" class="form-control" placeholder="jane.doe@hospital.com" required>
+                    </div>
+                    <div class="col-md-12 text-start">
+                        <label class="form-label small fw-bold text-uppercase text-secondary">Password</label>
+                        <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+                    </div>
+                    <div class="col-md-6 text-start">
+                        <label class="form-label small fw-bold text-uppercase text-secondary">Specialization</label>
+                        <input type="text" name="specialization" class="form-control" placeholder="Ophthalmology">
+                    </div>
+                    <div class="col-md-6 text-start">
+                        <label class="form-label small fw-bold text-uppercase text-secondary">Hospital</label>
+                        <input type="text" name="hospital" class="form-control" placeholder="City Eye Clinic">
+                    </div>
+                </div>
+                <button type="submit" class="btn-register">REGISTER ACCOUNT</button>
+            </form>
+
+            <div class="mt-4 pt-3 border-top">
+                <p class="small text-muted mb-0">Already have an account? 
+                    <a href="{{ url_for('login') }}" class="text-primary fw-bold text-decoration-none">← Back to Login</a>
+                </p>
+            </div>
         </div>
     </div>
-</div>
+
+    <footer class="text-center">
+        <div class="container">
+            <h6 class="fw-bold text-white mb-2">OCULARIS</h6>
+            <p class="small mb-0">&copy; 2026 Ocularis Diagnostic System. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </html>
