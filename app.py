@@ -26,6 +26,11 @@ def get_db():
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
+@app.route("/")
+def index():
+    # This renders the new homepage code you just pasted
+    return render_template('home.html')
+
 # --- NEW: AJAX ROUTE FOR PATIENT VERIFICATION ---
 @app.route("/get_patient/<p_id>")
 def get_patient(p_id):
@@ -45,7 +50,7 @@ def get_patient(p_id):
         })
     return jsonify({"success": False, "message": "Patient not found"})
 
-@app.route("/", methods=["GET", "POST"])
+@app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
         email = request.form.get("username")
@@ -350,10 +355,18 @@ def view_result(record_id):
                            description=description)
 
 
-@app.route("/logout")
+@app.route('/logout')
 def logout():
-    session.clear()
-    return redirect(url_for("login"))
+    session.clear()  # Removes everything from the session
+    return redirect(url_for('login'))
+
+@app.after_request
+def add_header(response):
+    # These headers tell the browser: "Do not store a copy of this page"
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
 
 if __name__ == "__main__":
     app.run(debug=True)
