@@ -62,9 +62,16 @@ def login():
         conn.close()
         
         if user:
+            # FIX 1: Clear the session queue before redirecting to Dashboard
+            # This ensures "Account Created" or "Invalid" messages don't follow you in
+            session.pop('_flashes', None) 
+            
             session["user"] = user['id']
             return redirect(url_for("dashboard"))
         else:
+            # FIX 2: Clear old flashes before adding a new "Invalid" one
+            # This prevents multiple "Invalid" messages from stacking up
+            session.pop('_flashes', None)
             flash("Invalid email or password.", "danger")
             
     return render_template("login.html")
@@ -85,15 +92,20 @@ def register():
                 VALUES (?, ?, ?, ?, ?)
             """, (name, email, password, spec, hosp))
             conn.commit()
+            
+            # FIX 3: Clear any potential errors before adding the success message
+            session.pop('_flashes', None)
             flash("Account successfully created! You can now log in.", "success")
             return redirect(url_for("login"))
         except sqlite3.IntegrityError:
+            session.pop('_flashes', None)
             flash("Registration failed: This email is already in use.", "danger")
         finally:
             conn.close()
             
     return render_template("register.html")
 
+    
 @app.route("/dashboard")
 def dashboard():
     if "user" not in session: return redirect(url_for("login"))

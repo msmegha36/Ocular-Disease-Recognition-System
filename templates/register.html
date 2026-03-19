@@ -11,6 +11,8 @@
     <style>
         :root {
             --primary: #2563eb;
+            --success: #22c55e;
+            --error: #ef4444;
             --text-main: #1e293b;
             --bg-body: #f8fafc;
         }
@@ -31,7 +33,7 @@
             width: 100%;
         }
 
-        /* Centered Wrapper */
+        /* Page Centering Logic */
         .register-wrapper {
             flex: 1;
             display: flex;
@@ -46,29 +48,63 @@
             border-radius: 20px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
             width: 100%;
-            max-width: 500px; /* Slightly wider for registration fields */
+            max-width: 550px;
             text-align: center;
         }
 
-        .form-control {
-            padding: 0.7rem 1rem;
+        /* Form Styling & Validation */
+        .form-control, .form-select {
+            padding: 0.75rem 1rem;
             border-radius: 8px;
             border: 1px solid #e2e8f0;
+            transition: all 0.2s ease;
+            font-size: 0.95rem;
+        }
+
+        .form-control:focus, .form-select:focus {
+            box-shadow: none;
+            border-color: var(--primary);
+        }
+
+        /* Validation States */
+        .is-valid-input {
+            border-color: var(--success) !important;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%2322c55e' d='M2.3 6.73L.6 4.53c-.4-1.04.46-1.4 1.1-.8l1.1 1.4 3.4-3.8c.6-.63 1.6-.27 1.2.7l-4 4.6c-.43.5-.8.4-1.1.1z'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right calc(0.375em + 0.1875rem) center;
+            background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+        }
+
+        .is-invalid-input {
+            border-color: var(--error) !important;
+        }
+
+        .validation-msg {
+            font-size: 0.7rem;
+            margin-top: 4px;
+            display: none;
+            font-weight: 500;
         }
 
         .btn-register {
             background: var(--primary);
             color: white;
             width: 100%;
-            padding: 0.8rem;
+            padding: 0.85rem;
             border: none;
             border-radius: 8px;
             font-weight: 700;
-            margin-top: 1rem;
+            margin-top: 1.5rem;
             transition: 0.3s;
         }
 
-        .btn-register:hover {
+        .btn-register:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .btn-register:hover:not(:disabled) {
             background: #1d4ed8;
             transform: translateY(-1px);
         }
@@ -89,13 +125,8 @@
             <a class="navbar-brand fw-bold" href="{{ url_for('index') }}" style="color: var(--primary) !important;">
                 <i class="fa-solid fa-eye me-2"></i>OCULARIS
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link fw-semibold text-dark" href="{{ url_for('index') }}">Home</a></li>
-                </ul>
+            <div class="ms-auto">
+                <a class="nav-link fw-semibold text-dark" href="{{ url_for('index') }}">Home</a>
             </div>
         </div>
     </nav>
@@ -104,7 +135,7 @@
         <div class="register-box">
             <div class="mb-4">
                 <img src="{{ url_for('static', filename='images/eye.png') }}" alt="Ocularis Logo" style="width: 50px;">
-                <h2 class="fw-extrabold mt-3 mb-1" style="letter-spacing: -1px;">CREATE ACCOUNT</h2>
+                <h2 class="fw-extrabold mt-3 mb-1" style="letter-spacing: -1px; color: var(--text-main);">CREATE ACCOUNT</h2>
                 <p class="text-muted small">Medical Professional Registration</p>
             </div>
 
@@ -118,30 +149,50 @@
               {% endif %}
             {% endwith %}
 
-            <form method="POST">
+            <form method="POST" id="registerForm">
                 <div class="row g-3">
                     <div class="col-md-12 text-start">
                         <label class="form-label small fw-bold text-uppercase text-secondary">Full Name</label>
-                        <input type="text" name="name" class="form-control" placeholder="Dr. Jane Doe" required>
+                        <input type="text" name="name" id="nameInput" class="form-control" placeholder="Dr. Jane Doe" required>
+                        <div class="validation-msg text-danger">Please enter your full name (at least 3 characters).</div>
                     </div>
+
                     <div class="col-md-12 text-start">
                         <label class="form-label small fw-bold text-uppercase text-secondary">Email Address</label>
-                        <input type="email" name="email" class="form-control" placeholder="jane.doe@hospital.com" required>
+                        <input type="email" name="email" id="emailInput" class="form-control" placeholder="doctor@hospital.com" required>
+                        <div class="validation-msg text-danger">Please enter a valid work email address.</div>
                     </div>
+
                     <div class="col-md-12 text-start">
                         <label class="form-label small fw-bold text-uppercase text-secondary">Password</label>
-                        <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+                        <input type="password" name="password" id="passInput" class="form-control" placeholder="••••••••" required>
+                        <div class="validation-msg text-danger">Password must be at least 8 characters.</div>
                     </div>
+
                     <div class="col-md-6 text-start">
                         <label class="form-label small fw-bold text-uppercase text-secondary">Specialization</label>
-                        <input type="text" name="specialization" class="form-control" placeholder="Ophthalmology">
+                        <select name="specialization" id="specInput" class="form-select" required>
+                            <option value="" disabled selected>Select Specialty</option>
+                            <option value="General Ophthalmology">General Ophthalmology</option>
+                            <option value="Retina Specialist">Retina Specialist</option>
+                            <option value="Cornea Specialist">Cornea & External Disease</option>
+                            <option value="Glaucoma Specialist">Glaucoma Specialist</option>
+                            <option value="Pediatric Ophthalmology">Pediatric Ophthalmology</option>
+                            <option value="Oculoplastics">Oculoplastics & Orbit</option>
+                            <option value="Neuro-Ophthalmology">Neuro-Ophthalmology</option>
+                            <option value="Refractive Surgery">Refractive Surgery</option>
+                            <option value="Uveitis Specialist">Uveitis & Immunology</option>
+                            <option value="Other">Other Medical Professional</option>
+                        </select>
                     </div>
+
                     <div class="col-md-6 text-start">
-                        <label class="form-label small fw-bold text-uppercase text-secondary">Hospital</label>
-                        <input type="text" name="hospital" class="form-control" placeholder="City Eye Clinic">
+                        <label class="form-label small fw-bold text-uppercase text-secondary">Hospital / Clinic</label>
+                        <input type="text" name="hospital" id="hospInput" class="form-control" placeholder="City Medical Center" required>
                     </div>
                 </div>
-                <button type="submit" class="btn-register">REGISTER ACCOUNT</button>
+
+                <button type="submit" id="submitBtn" class="btn-register" disabled>REGISTER ACCOUNT</button>
             </form>
 
             <div class="mt-4 pt-3 border-top">
@@ -158,6 +209,63 @@
             <p class="small mb-0">&copy; 2026 Ocularis Diagnostic System. All Rights Reserved.</p>
         </div>
     </footer>
+
+    <script>
+        const submitBtn = document.getElementById('submitBtn');
+        const inputs = {
+            name: document.getElementById('nameInput'),
+            email: document.getElementById('emailInput'),
+            pass: document.getElementById('passInput'),
+            spec: document.getElementById('specInput'),
+            hosp: document.getElementById('hospInput')
+        };
+
+        function validateEmail(email) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        }
+
+        function updateUI(input, isValid) {
+            const msg = input.nextElementSibling;
+            if (input.value === "" || (input.tagName === "SELECT" && input.value === "")) {
+                input.classList.remove('is-valid-input', 'is-invalid-input');
+                if(msg && msg.classList.contains('validation-msg')) msg.style.display = 'none';
+            } else if (isValid) {
+                input.classList.add('is-valid-input');
+                input.classList.remove('is-invalid-input');
+                if(msg && msg.classList.contains('validation-msg')) msg.style.display = 'none';
+            } else {
+                input.classList.add('is-invalid-input');
+                input.classList.remove('is-valid-input');
+                if(msg && msg.classList.contains('validation-msg')) msg.style.display = 'block';
+            }
+        }
+
+        function checkForm() {
+            const vName = inputs.name.value.trim().length >= 3;
+            const vEmail = validateEmail(inputs.email.value);
+            const vPass = inputs.pass.value.length >= 8;
+            const vSpec = inputs.spec.value !== ""; 
+            const vHosp = inputs.hosp.value.trim().length > 0;
+
+            // Update UI for each field
+            updateUI(inputs.name, vName);
+            updateUI(inputs.email, vEmail);
+            updateUI(inputs.pass, vPass);
+            updateUI(inputs.spec, vSpec);
+            updateUI(inputs.hosp, vHosp);
+
+            // Enable button only if all conditions are met
+            submitBtn.disabled = !(vName && vEmail && vPass && vSpec && vHosp);
+        }
+
+        // Add event listeners
+        Object.values(inputs).forEach(input => {
+            input.addEventListener('input', checkForm);
+            if (input.tagName === "SELECT") {
+                input.addEventListener('change', checkForm);
+            }
+        });
+    </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
