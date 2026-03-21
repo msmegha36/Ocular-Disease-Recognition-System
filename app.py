@@ -105,10 +105,11 @@ def register():
             
     return render_template("register.html")
 
-    
+
 @app.route("/dashboard")
 def dashboard():
-    if "user" not in session: return redirect(url_for("login"))
+    if "user" not in session:
+         return redirect(url_for("login"))
     conn = get_db()
     # Fetch doctor info
     user_data = conn.execute("SELECT name, specialization, hospital FROM users WHERE id=?", (session["user"],)).fetchone()
@@ -324,6 +325,8 @@ def history():
     
 @app.route("/view_result/<int:record_id>")
 def view_result(record_id):
+    if "user" not in session:
+        return redirect(url_for("login"))
     conn = get_db()
     # 1. Fetch the record and JOIN with patients to get the name
     record = conn.execute('''
@@ -374,10 +377,9 @@ def logout():
 
 @app.after_request
 def add_header(response):
-    # These headers tell the browser: "Do not store a copy of this page"
-    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, post-check=0, pre-check=0"
     response.headers["Pragma"] = "no-cache"
-    response.headers["Expires"] = "0"
+    response.headers["Expires"] = "-1" # Setting to -1 or 0 tells the browser it's already expired
     return response
 
 if __name__ == "__main__":

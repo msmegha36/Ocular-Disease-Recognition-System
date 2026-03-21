@@ -304,5 +304,16 @@
             }
         });
     </script>
+    <script>
+    // This script checks if the page was loaded from the cache (like when hitting 'Back')
+    // If it was, it forces a reload from the server to check the session status.
+    (function () {
+        window.onpageshow = function(event) {
+            if (event.persisted) {
+                window.location.reload();
+            }
+        };
+    })();
+</script>
 </body>
 </html>

@@ -22,6 +22,7 @@ def init_db():
         age INTEGER,
         gender TEXT,
         phone INTEGER,
+        doctor_id INTEGER;
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
     """)
