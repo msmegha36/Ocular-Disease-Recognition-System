@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ocularis | Account Settings</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg-body: #f8fafc;
+        }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-body); overflow-x: hidden; }
+
+        /* RESPONSIVE LAYOUT LOGIC */
+        .main-content { 
+            padding: 20px; 
+            transition: all 0.3s ease;
+        }
+
+        @media (min-width: 992px) {
+            .main-content { margin-left: 280px; padding: 40px; min-height: 100vh; }
+        }
+
+        /* Profile Header Component */
+        .profile-banner {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            border-radius: 20px;
+            color: white;
+            padding: 30px; /* Reduced for mobile */
+            margin-bottom: 30px;
+            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.15);
+        }
+
+        @media (min-width: 768px) {
+            .profile-banner { padding: 45px; }
+        }
+
+        .avatar-initials {
+            width: 80px;
+            height: 80px;
+            background: white;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: 800;
+            border-radius: 50%;
+            border: 4px solid rgba(255,255,255,0.2);
+        }
+
+        @media (min-width: 768px) {
+            .avatar-initials { width: 100px; height: 100px; font-size: 2.2rem; }
+        }
+
+        /* Information Cards */
+        .info-card {
+            background: white;
+            border-radius: 20px;
+            border: none;
+            padding: 25px;
+            height: 100%;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        }
+
+        .label-text { color: #64748b; font-size: 0.7rem; font-weight: 700; text-uppercase; letter-spacing: 0.5px; }
+        .value-text { color: #1e293b; font-size: 1rem; font-weight: 600; margin-top: 4px; word-break: break-all; }
+
+        /* Validation Styling */
+        .form-control:invalid:focus { border-color: #ef4444; box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1); }
+        .invalid-feedback { font-size: 0.75rem; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+    {% include 'navbar.html' %}
+
+    <main class="main-content">
+        <div class="container-fluid">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                  <div class="alert alert-{{ 'success' if category == 'success' else 'primary' }} border-0 shadow-sm rounded-3 py-3 mb-4 alert-dismissible fade show" role="alert">
+                    <i class="fa-solid fa-circle-info me-2"></i> {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                  </div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+
+            <div class="profile-banner d-flex align-items-center justify-content-between gap-4">
+    <div class="d-flex align-items-center gap-4">
+        <div class="avatar-initials shadow-sm">
+            {{ user.name[0] | upper }}{{ user.name.split(' ')[-1][0] | upper if ' ' in user.name else '' }}
+        </div>
+        <div>
+            <h1 class="h2 fw-bold m-0">{{ user.name }}</h1>
+            <p class="opacity-75 m-0 fw-medium fs-5">{{ user.specialization or 'Medical Professional' }}</p>
+        </div>
+    </div>
+
+    <button class="btn btn-light text-primary fw-bold px-4 py-2 rounded-pill shadow-sm" 
+            style="min-width: 140px; height: fit-content;"
+            data-bs-toggle="modal" data-bs-target="#editProfileModal">
+        <i class="fa-solid fa-user-pen me-2"></i>Edit Profile
+    </button>
+</div>
+
+            <div class="row g-4">
+                <div class="col-12 col-xl-6">
+                    <div class="card info-card">
+                        <h6 class="fw-bold mb-4 text-primary text-uppercase small"><i class="fa-solid fa-hospital me-2"></i>Practice Details</h6>
+                        <div class="row g-3">
+                            <div class="col-sm-6 mb-3">
+                                <label class="label-text">Medical Facility</label>
+                                <p class="value-text mb-0">{{ user.hospital }}</p>
+                            </div>
+                            <div class="col-sm-6 mb-3">
+                                <label class="label-text">Current Specialty</label>
+                                <p class="value-text mb-0">{{ user.specialization or 'Not Set' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-xl-6">
+                    <div class="card info-card">
+                        <h6 class="fw-bold mb-4 text-primary text-uppercase small"><i class="fa-solid fa-shield-halved me-2"></i>Security & Contact</h6>
+                        <div class="row g-3">
+                            <div class="col-sm-6 mb-3">
+                                <label class="label-text">Email Address</label>
+                                <p class="value-text mb-0">{{ user.email }}</p>
+                            </div>
+                            <div class="col-sm-6 mb-3">
+                                <label class="label-text">Verified Status</label>
+                                <p class="value-text text-success mb-0"><i class="fa-solid fa-circle-check me-2"></i>Verified Provider</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="editProfileModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg"> <div class="modal-content shadow-lg">
+                    <div class="modal-header border-0 p-4 pb-0">
+                        <h4 class="fw-bold m-0">Update Account Information</h4>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form action="{{ url_for('settings') }}" method="POST" class="needs-validation" novalidate>
+                        <div class="modal-body p-4">
+                            <div class="row g-3">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label small fw-bold text-secondary text-uppercase">Full Name</label>
+                                    <input type="text" name="name" class="form-control" value="{{ user.name }}" required minlength="3">
+                                    <div class="invalid-feedback">Please enter at least 3 characters.</div>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label small fw-bold text-secondary text-uppercase">Specialization</label>
+                                    <select name="specialization" class="form-select" required>
+                                        <option value="" disabled>Select Specialty</option>
+                                        {% set list = ['General Ophthalmology', 'Retina Specialist', 'Cornea Specialist', 'Glaucoma Specialist', 'Other'] %}
+                                        {% for item in list %}
+                                            <option value="{{ item }}" {% if user.specialization == item %}selected{% endif %}>{{ item }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="invalid-feedback">Please select a specialty.</div>
+                                </div>
+
+                                <div class="col-12 mb-3">
+                                    <label class="form-label small fw-bold text-secondary text-uppercase">Hospital/Clinic</label>
+                                    <input type="text" name="hospital" class="form-control" value="{{ user.hospital }}" required>
+                                    <div class="invalid-feedback">Hospital name is required.</div>
+                                </div>
+
+                                <div class="col-12 pt-3 border-top">
+                                    <label class="form-label small fw-bold text-danger text-uppercase">New Password (Optional)</label>
+                                    <input type="password" name="new_password" id="new_password" class="form-control" placeholder="Min 8 characters" minlength="8">
+                                    <div class="invalid-feedback">Password must be at least 8 characters long.</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-0 p-4 pt-0">
+                            <button type="button" class="btn btn-light fw-bold px-4" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary fw-bold px-4">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        (function () {
+            'use strict'
+            var forms = document.querySelectorAll('.needs-validation')
+            Array.prototype.slice.call(forms).forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault()
+                        event.stopPropagation()
+                    }
+                    form.classList.add('was-validated')
+                }, false)
+            })
+        })()
+    </script>
+</body>
+</html>

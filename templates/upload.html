@@ -222,14 +222,25 @@
             <form method="POST" action="/upload" enctype="multipart/form-data">
                 
                 <div class="lookup-row">
-                    <div class="input-field-wrapper">
-                        <label class="input-label">Patient ID Verification</label>
-                        <input type="text" name="patient_id" id="patient_id" placeholder="Enter Patient ID (e.g., P-1002)" required>
-                    </div>
-                    <button type="button" class="verify-btn" onclick="fetchPatient()">
-                        <i class="fa-solid fa-magnifying-glass"></i> Verify
-                    </button>
-                </div>
+    <div class="input-field-wrapper">
+        <label class="input-label">Enter Patient ID to Verify</label>
+        <div class="input-group">
+            <span class="input-group-text bg-white border-end-0">
+                <i class="fa-solid fa-id-card text-muted"></i>
+            </span>
+            <input type="text" 
+                   name="patient_id" 
+                   id="patient_id" 
+                   class="form-control border-start-0" 
+                   placeholder="e.g. PAT-101" 
+                   required 
+                   style="padding: 12px; border-radius: 0 8px 8px 0;">
+        </div>
+    </div>
+    <button type="button" class="verify-btn" onclick="fetchPatient()">
+        <i class="fa-solid fa-magnifying-glass me-2"></i> Verify Patient
+    </button>
+</div>
 
                 <div id="patient-banner" class="info-banner">
                     <div class="d-flex align-items-center flex-wrap gap-2">
@@ -279,24 +290,44 @@
         };
 
         async function fetchPatient() {
-            const pid = document.getElementById('patient_id').value;
-            if (!pid) return alert("Please enter a Patient ID first.");
-            try {
-                const response = await fetch(`/get_patient/${pid}`);
-                const data = await response.json();
-                if (data.success) {
-                    const banner = document.getElementById('patient-banner');
-                    banner.style.display = 'block';
-                    document.getElementById('disp-name').innerText = data.name;
-                    document.getElementById('disp-age').innerText = data.age;
-                    document.getElementById('disp-gender').innerText = data.gender;
-                } else {
-                    alert("Patient ID not found in Ocularis database.");
-                }
-            } catch (err) {
-                console.error("Verification error:", err);
-            }
+    const pid = document.getElementById('patient_id').value.trim();
+    const banner = document.getElementById('patient-banner');
+    
+    if (!pid) {
+        alert("Please enter a Patient ID first.");
+        return;
+    }
+
+    try {
+        // Show a "loading" state on the button if you like
+        const verifyBtn = document.querySelector('.verify-btn');
+        const originalText = verifyBtn.innerHTML;
+        verifyBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Checking...';
+        verifyBtn.disabled = true;
+
+        const response = await fetch(`/get_patient/${pid}`);
+        const data = await response.json();
+
+        if (data.success) {
+            banner.style.display = 'block';
+            banner.classList.add('alert-success'); // Ensure it looks positive
+            document.getElementById('disp-name').innerText = data.name;
+            document.getElementById('disp-age').innerText = data.age;
+            document.getElementById('disp-gender').innerText = data.gender;
+        } else {
+            banner.style.display = 'none';
+            alert("Verification Failed: " + (data.message || "Patient ID not found in Ocularis records."));
         }
+
+        // Restore button state
+        verifyBtn.innerHTML = originalText;
+        verifyBtn.disabled = false;
+
+    } catch (err) {
+        console.error("Verification error:", err);
+        alert("Network error: Could not connect to the verification server.");
+    }
+}
 
         function updateLabel(side) {
             const input = document.getElementById(side + '_file');

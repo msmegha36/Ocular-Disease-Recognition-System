@@ -137,7 +137,7 @@
                 <div class="text-start mb-4">
                     <label class="form-label small fw-bold text-uppercase text-secondary">Password</label>
                     <input type="password" name="password" id="passInput" class="form-control" placeholder="••••••••" required>
-                    <div id="passMsg" class="validation-msg text-danger">Password must be at least 6 characters.</div>
+                    <div id="passMsg" class="validation-msg text-danger">Password must be at least 8 characters.</div>
                 </div>
                 <button type="submit" id="submitBtn" class="btn-signin">SIGN IN</button>
             </form>
@@ -170,7 +170,7 @@
 
         function checkForm() {
             const isEmailValid = validateEmail(emailInput.value);
-            const isPassValid = passInput.value.length >= 6;
+            const isPassValid = passInput.value.length >= 8;
 
             // Email UI
             if (emailInput.value === "") {

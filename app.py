@@ -38,7 +38,11 @@ def get_patient(p_id):
         return jsonify({"success": False, "message": "Unauthorized"}), 401
     
     conn = get_db()
-    patient = conn.execute("SELECT name, age, gender FROM patients WHERE patient_id = ?", (p_id,)).fetchone()
+    # ADDED: AND doctor_id = ?
+    patient = conn.execute(
+        "SELECT name, age, gender FROM patients WHERE patient_id = ? AND doctor_id = ?", 
+        (p_id, session["user"])
+    ).fetchone()
     conn.close()
     
     if patient:
@@ -48,7 +52,7 @@ def get_patient(p_id):
             "age": patient["age"],
             "gender": patient["gender"]
         })
-    return jsonify({"success": False, "message": "Patient not found"})
+    return jsonify({"success": False, "message": "Patient not found or unauthorized"})
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -129,7 +133,7 @@ def register_patient():
     if "user" not in session:
         return redirect(url_for("login"))
 
-    success = False  # Track if registration worked
+    success = False 
     if request.method == "POST":
         p_name = request.form.get("name")
         p_age = request.form.get("age")
@@ -138,21 +142,20 @@ def register_patient():
 
         conn = get_db()
         try:
+            # ADDED doctor_id to the columns and the values
             conn.execute('''
-                INSERT INTO patients (name, age, gender, phone) 
-                VALUES (?, ?, ?, ?)
-            ''', (p_name, p_age, p_gender, p_phone))
+                INSERT INTO patients (name, age, gender, phone, doctor_id) 
+                VALUES (?, ?, ?, ?, ?)
+            ''', (p_name, p_age, p_gender, p_phone, session["user"]))
             conn.commit()
             
-            flash(f"Patient Record for {p_name} created successfully! Redirecting...", "success")
+            flash(f"Patient Record for {p_name} created successfully!", "success")
             success = True 
         except Exception as e:
-            print(f"Database Error: {e}")
             flash("Error: Could not register patient.", "danger")
         finally:
             conn.close()
 
-    # Pass the success variable to the template
     return render_template("register_patient.html", success=success)
 
 @app.route("/patients")
@@ -161,11 +164,12 @@ def list_patients():
         return redirect(url_for("login"))
     
     conn = get_db()
-    # Fetching in descending order of patient_id or created_at
+    # ADDED WHERE doctor_id = ?
     patients = conn.execute('''
-        SELECT patient_id,name,age,gender FROM patients 
+        SELECT patient_id, name, age, gender FROM patients 
+        WHERE doctor_id = ?
         ORDER BY created_at DESC
-    ''').fetchall()
+    ''', (session["user"],)).fetchall()
     conn.close()
     
     return render_template("patients.html", patients=patients)    
@@ -175,34 +179,33 @@ def upload():
     if "user" not in session: 
         return redirect(url_for("login"))
 
+    conn = get_db()
+
     if request.method == "POST":
-        # 1. GET DATA FROM FORM FIRST
+        # 1. GET DATA FROM FORM
         patient_id = request.form.get("patient_id") 
-        
-        # Pull files from the request
-        # This defines 'left_eye' and 'right_eye' so the NameError disappears
         left_eye = request.files.get("left_eye")
         right_eye = request.files.get("right_eye")
 
-        # Basic safety check
         if not left_eye or not right_eye:
+            conn.close()
             return "Missing images", 400
 
-        # 2. RE-FETCH PATIENT DETAILS
-        # This prevents the "None" values in the final report
-        conn = get_db()
+        # 2. SECURITY CHECK: Ensure this doctor owns this patient
         patient_data = conn.execute(
-            "SELECT name, age, gender FROM patients WHERE patient_id = ?", 
-            (patient_id,)
+            "SELECT name, age, gender FROM patients WHERE patient_id = ? AND doctor_id = ?", 
+            (patient_id, session["user"])
         ).fetchone()
         
-        # Provide fallbacks if patient not found
-        p_name = patient_data["name"] if patient_data else "Unknown"
-        p_age = patient_data["age"] if patient_data else "N/A"
-        p_gender = patient_data["gender"] if patient_data else "N/A"
+        if not patient_data:
+            conn.close()
+            return "Error: Patient not found or access denied.", 403
+        
+        p_name = patient_data["name"]
+        p_age = patient_data["age"]
+        p_gender = patient_data["gender"]
 
-        # 3. SAVE ORIGINAL IMAGES
-        # Using .filename is safe now because left_eye is defined
+        # 3. SAVE IMAGES
         l_path = os.path.join(UPLOAD_FOLDER, left_eye.filename)
         r_path = os.path.join(UPLOAD_FOLDER, right_eye.filename)
         left_eye.save(l_path)
@@ -211,20 +214,17 @@ def upload():
         # 4. PREPROCESS & PREDICT
         l_img_raw, _ = preprocess_image(l_path)
         r_img_raw, _ = preprocess_image(r_path)
-        
         l_input = np.expand_dims(l_img_raw, 0)
         r_input = np.expand_dims(r_img_raw, 0)
 
         CLASSES = ["Normal", "Diabetes", "Glaucoma", "Cataract", "AMD", "Hypertension", "Myopia", "Others"]
 
-        # Siamese Three-Pass Prediction
         l_preds = model.predict([l_input, l_input])[0]
         r_preds = model.predict([r_input, r_input])[0]
         joint_preds = model.predict([l_input, r_input])[0]
 
         left_status = CLASSES[np.argmax(l_preds)]
         right_status = CLASSES[np.argmax(r_preds)]
-        
         top_idx = np.argmax(joint_preds)
         primary_disease = CLASSES[top_idx]
         conf_val = round(float(joint_preds[top_idx]) * 100, 2)
@@ -232,67 +232,48 @@ def upload():
         # 5. GENERATE HEATMAPS
         left_heatmap_path = None
         right_heatmap_path = None
-         # In your app.py upload route:
         try:
-             # Pass the left image into BOTH inputs of the Siamese model.
-             # This effectively "mutes" the right eye influence for this specific heatmap.
              l_h_raw = generate_siamese_heatmap(l_path, model, target_side='left') 
-    
-             # Do the same for the right side
              r_h_raw = generate_siamese_heatmap(r_path, model, target_side='right')
-
-             # Clean paths as before
              left_heatmap_path = l_h_raw.replace('static/', '').replace('\\', '/') if l_h_raw else None
              right_heatmap_path = r_h_raw.replace('static/', '').replace('\\', '/') if r_h_raw else None
         except Exception as e:
              print(f"Heatmap Error: {e}")
 
-        # 6. FINAL INTERPRETATION & DB SAVE
+        # 6. DB SAVE
         detailed_desc = (f"Clinical screening for {p_name} reveals markers consistent with {primary_disease}. "
                          f"Left Eye (OS): {left_status}. Right Eye (OD): {right_status}. "
                          f"Bilateral feature correlation probability: {conf_val}%.")
         
-        patient_id_val = request.form.get("patient_id")
-
-        try:  # Align this try block with patient_id_val
+        try:
             conn.execute('''
                 INSERT INTO patient_records 
                 (doctor_id, patient_id, left_eye_img, right_eye_img, left_diagnosis, 
                  right_diagnosis, overall_findings, left_heatmap, right_heatmap) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (
-                session["user"], 
-                patient_id_val, 
-                left_eye.filename, 
-                right_eye.filename, 
-                left_status, 
-                right_status, 
-                f"{primary_disease} ({conf_val}%)", 
-                left_heatmap_path, 
-                right_heatmap_path
-            ))
+            ''', (session["user"], patient_id, left_eye.filename, right_eye.filename, 
+                  left_status, right_status, f"{primary_disease} ({conf_val}%)", 
+                  left_heatmap_path, right_heatmap_path))
             conn.commit()
-        except Exception as e:
-            print(f"DB Error: {e}")
         finally:
             conn.close()
 
-        # 7. RENDER RESULTS
-        return render_template(
-            "result.html",
-            primary_disease=primary_disease,
-            confidence=conf_val,
-            left_status=left_status,
-            right_status=right_status,
-            left_img=left_eye.filename,
-            right_img=right_eye.filename,
-            left_heatmap=left_heatmap_path,
-            right_heatmap=right_heatmap_path,
-            patient={"name": p_name, "age": p_age, "gender": p_gender},
-            description=detailed_desc
-        )
+        return render_template("result.html", primary_disease=primary_disease, confidence=conf_val,
+                               left_status=left_status, right_status=right_status,
+                               left_img=left_eye.filename, right_img=right_eye.filename,
+                               left_heatmap=left_heatmap_path, right_heatmap=right_heatmap_path,
+                               patient={"name": p_name, "age": p_age, "gender": p_gender},
+                               description=detailed_desc)
 
-    return render_template("upload.html")
+    # --- THIS PART IS NEW FOR THE DROPDOWN ---
+    # Fetch only patients belonging to THIS doctor
+    patients = conn.execute(
+        "SELECT patient_id, name FROM patients WHERE doctor_id = ? ORDER BY name ASC", 
+        (session["user"],)
+    ).fetchall()
+    conn.close()
+
+    return render_template("upload.html", patients=patients)
 
 @app.route("/history")
 def history():
@@ -381,6 +362,43 @@ def add_header(response):
     response.headers["Pragma"] = "no-cache"
     response.headers["Expires"] = "-1" # Setting to -1 or 0 tells the browser it's already expired
     return response
+
+@app.route('/settings', methods=['GET', 'POST'])
+def settings():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+
+    conn = get_db()
+    
+    if request.method == 'POST':
+        name = request.form.get('name')
+        spec = request.form.get('specialization')
+        hosp = request.form.get('hospital')
+        new_password = request.form.get('new_password')
+        
+        try:
+            # Update basic info
+            conn.execute("""
+                UPDATE users SET name=?, specialization=?, hospital=? WHERE id=?
+            """, (name, spec, hosp, session['user']))
+            
+            # Update password if provided
+            if new_password:
+                hashed_pw = hash_password(new_password)
+                conn.execute("UPDATE users SET password=? WHERE id=?", (hashed_pw, session['user']))
+                
+            conn.commit()
+            flash("Profile updated successfully!", "success")
+        except Exception as e:
+            flash("Error updating profile.", "danger")
+        finally:
+            conn.close()
+        return redirect(url_for('settings'))
+
+    # Load current doctor data
+    user = conn.execute("SELECT * FROM users WHERE id=?", (session['user'],)).fetchone()
+    conn.close()
+    return render_template('settings.html', user=user)
 
 if __name__ == "__main__":
     app.run(debug=True)
